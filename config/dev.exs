@@ -10,14 +10,14 @@ if is_nil(database_url) do
     username: "postgres",
     password: "postgres",
     database: "drivers_seat_coop_dev",
-    hostname: "localhost",
+    hostname: "db",
     pool_size: 10,
     show_sensitive_data_on_connection_error: true,
     stacktrace: true,
     types: DriversSeatCoop.PostgresTypes
 else
   config :dsc, DriversSeatCoop.Repo,
-    ssl: true,
+    # ssl: true,
     url: database_url,
     pool_size: 10,
     show_sensitive_data_on_connection_error: true,
@@ -35,7 +35,7 @@ config :dsc, DriversSeatCoopWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   url: [host: "localhost", port: 4000, scheme: "http"],
-  http: [ip: {127, 0, 0, 1}, port: 4000],
+  http: [ip: {0, 0, 0, 0}, port: 4000],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

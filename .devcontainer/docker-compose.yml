@@ -1,0 +1,31 @@
+version: "3.6"
+
+services:
+  db:
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    image: 'postgis/postgis:14-3.4'
+    restart: always
+    volumes:
+      - pgdata:/opt/homebrew/var/postgresql@14
+      # - 'pgdata:/var/lib/postgresql/data'
+  app_dev:
+    build:
+      # Set the context to the parent directory, so we can add `.tool-versions` to the container
+      context: ../
+      dockerfile: .devcontainer/Dockerfile
+    environment:
+      MIX_ENV: dev
+
+    volumes:
+      - ../:/workspace/dsc
+
+    depends_on:
+      - db
+    ports:
+      - 4000:4000
+volumes:
+  pgdata:

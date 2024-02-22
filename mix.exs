@@ -27,7 +27,7 @@ defmodule DriversSeatCoop.MixProject do
   def application do
     [
       mod: {DriversSeatCoop.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :ssl]
     ]
   end
 
@@ -68,7 +68,8 @@ defmodule DriversSeatCoop.MixProject do
       {:swoosh, "~> 1.3"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
-      {:torch, "~> 3.7.0-rc.0"}
+      {:torch, "~> 3.7.0-rc.0"},
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false},
     ]
   end
 
