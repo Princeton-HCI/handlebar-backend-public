@@ -31,7 +31,10 @@ This project uses:
 * [Mixpanel](https://mixpanel.com/)
 * [SendGrid](https://sendgrid.com/en-us/solutions/email-api) via Heroku add-on
 * [Sentry](https://sentry.io/welcome/)
+* [OneSignal](https://onesignal.com/)
 
 
-## [Setting-up a Development Environment](/docs/developer_setup/README.md)
-
+## Getting Started
+* [Setting-up a Development Environment](/docs/developer_setup/README.md)
+* [Environment Variables](/docs/environment_variables/README.md)
+* [Populating Geosptial Referece Data](/docs/populating_geographies/README.md)
