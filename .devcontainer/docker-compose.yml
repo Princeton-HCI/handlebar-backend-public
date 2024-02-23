@@ -18,6 +18,7 @@ services:
       context: ../
       dockerfile: .devcontainer/Dockerfile
     environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/drivers_seat_coop_dev
       MIX_ENV: dev
 
     volumes:
