@@ -32,9 +32,14 @@
 .elixir_ls
 
 # Mix artifacts
-/_build/
 /deps/
 *.ez
+/doc/
+/cover/
+/.fetch
+*.ez
+my_app*.tar
+
 
 # Generated on crash by the VM
 erl_crash.dump
@@ -43,3 +48,11 @@ erl_crash.dump
 /assets/node_modules/
 /priv/static/assets/
 /priv/static/cache_manifest.json
+
+# Node Artifacts
+npm-debug.log
+/assets/node_modules/
+
+# Irrelevant files
+Dockerfile
+/.iex.exs

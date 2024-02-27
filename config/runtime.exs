@@ -26,20 +26,25 @@ if config_env() == :prod do
     one_signal_app_id: System.get_env("ONE_SIGNAL_APP_ID")
 
   database_url =
-    System.get_env("DATABASE_URL") ||
+    System.get_env("CLOUD_SQL_CONNECTION_ID") ||
       raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
+      environment variable CLOUD_SQL_CONNECTION_ID is missing.
+      For example: project:region:service
       """
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
   config :dsc, DriversSeatCoop.Repo,
     # ssl: true,
-    url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+    socket_dir: "/cloudsql/#{System.get_env("CLOUD_SQL_CONNECTION_ID")}",
+    username: "postgres",
+    password: System.get_env("DB_PASSWORD"),
+    database: System.get_env("DB_NAME"),
+    pool_size: System.get_env("POOL_SIZE") || 10,
     socket_options: maybe_ipv6,
     types: DriversSeatCoop.PostgresTypes
+
+
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
