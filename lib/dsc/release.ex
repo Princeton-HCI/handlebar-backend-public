@@ -23,7 +23,7 @@ defmodule DriversSeatCoop.Release do
   end
 
   defp load_app do
+    :ssl.start()
     Application.load(@app)
-    {:ok, _} = Application.ensure_all_started(:ssl)
   end
 end
