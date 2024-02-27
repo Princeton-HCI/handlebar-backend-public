@@ -182,3 +182,6 @@ postgres:///postgres:<PASSWORD>@drivers_seat_coop_staging?host=/cloudsql/princet
 
 On the container, the unix socket will be mounted at `/cloudsql`.
 
+
+note 20240226: working on cloud run instead. seems easier to manage from a CD perspective.
+
