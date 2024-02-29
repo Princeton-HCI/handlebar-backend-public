@@ -33,6 +33,7 @@ if config_env() == :prod do
       """
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+  db_pool_size = System.get_env("POOL_SIZE") || "10"
 
   config :dsc, DriversSeatCoop.Repo,
     # ssl: true,
@@ -40,7 +41,9 @@ if config_env() == :prod do
     username: "postgres",
     password: System.get_env("DB_PASSWORD"),
     database: System.get_env("DB_NAME"),
-    pool_size: System.get_env("POOL_SIZE") || 10,
+    pool_size: String.to_integer("#{db_pool_size}"),
+    timeout: 50_000,
+    connect_timeout: 50_000,
     socket_options: maybe_ipv6,
     types: DriversSeatCoop.PostgresTypes
 
