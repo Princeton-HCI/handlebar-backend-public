@@ -17,20 +17,14 @@ defmodule DriversSeatCoop.Notifications.Oban.CTAGoalsCheckProgress do
 
   alias DriversSeatCoop.Accounts
   alias DriversSeatCoop.Accounts.User
-  alias DriversSeatCoop.Devices
-  alias DriversSeatCoop.Goals
   alias DriversSeatCoop.OneSignal
   alias DriversSeatCoop.Repo
 
   def schedule_jobs do
-    current_version_user_ids_qry =
-      Devices.get_user_ids_on_version_or_greater_query(Goals.app_version_min())
-
     included_users =
       Accounts.get_users_query()
       |> Accounts.filter_include_users_with_earnings_query()
       |> Accounts.filter_include_users_with_earnings_goals_query()
-      |> where([u], u.id in subquery(current_version_user_ids_qry))
       |> select([u], u.id)
       |> Repo.all()
 

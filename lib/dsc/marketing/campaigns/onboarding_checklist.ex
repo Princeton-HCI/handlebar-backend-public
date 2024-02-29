@@ -12,7 +12,6 @@ defmodule DriversSeatCoop.Marketing.Campaigns.OnboardingChecklist do
     Checklist.new(:onboarding_checklist)
     |> Campaign.with_category(:to_dos)
     |> Campaign.is_qualified(fn %CampaignState{} = state -> is_qualified(state) end)
-    |> Campaign.include_app_version(">= 3.1.0")
     |> Checklist.with_title("Finish Setting Up Driver's Seat")
     |> Checklist.show_progress()
     |> Checklist.with_item(fn %CampaignState{} = state -> get_items(state) end)

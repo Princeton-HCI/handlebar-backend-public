@@ -22,7 +22,6 @@ defmodule DriversSeatCoop.Marketing.Campaigns.MileageTrackingIntroSurvey do
     |> Campaign.is_qualified(fn %CampaignState{} = state ->
       is_qualified?(state.user, state.device, state.participant)
     end)
-    |> Campaign.exclude_app_version("< 3.0.8")
     |> Survey.with_section(
       SurveySection.new(:welcome)
       |> SurveySection.with_title("Track your Total Work Miles!")

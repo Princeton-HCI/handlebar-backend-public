@@ -66,22 +66,8 @@ defmodule DriversSeatCoop.Marketing do
        ) do
     versions_included = List.wrap(campaign.app_versions_included)
     versions_excluded = List.wrap(campaign.app_versions_excluded)
-    categories = campaign.get_categories.(state)
-    version_before_310 = Device.is_version_match?(state.device, "< 3.1.0")
 
     cond do
-      # App Versions before 3.1.0 only support interrupt based campaigns
-      version_before_310 and not Enum.member?(categories, :interrupt) ->
-        false
-
-      # App Versions before 3.1.0 can only handle ctas and surveys
-      version_before_310 and campaign.type not in [:content_cta, :survey] ->
-        false
-
-      # User is not qualified
-      not campaign.is_qualified.(state) ->
-        false
-
       # campaign has a device version requirement and user is not on that version
       Enum.any?(versions_included) and
           not does_device_version_match(state.device, versions_included) ->
@@ -91,21 +77,16 @@ defmodule DriversSeatCoop.Marketing do
       Enum.any?(versions_excluded) and does_device_version_match(state.device, versions_excluded) ->
         false
 
+      # User is not qualified
+      not campaign.is_qualified.(state) ->
+        false
+
       # User is qualified, and this is a new campaign for the user
       is_nil(state.participant) ->
         true
 
       # User has previously dismissed the campaign
       not is_nil(state.participant.dismissed_on) ->
-        false
-
-      # App Versions before 3.0.9 do not show accepted campaigns
-      version_before_310 and not is_nil(state.participant.accepted_on) ->
-        false
-
-      # App Versions before 3.0.9 do not show posponed campaigns
-      version_before_310 and not is_nil(state.participant.postponed_until) and
-          DateTime.compare(state.participant.postponed_until, DateTime.utc_now()) == :gt ->
         false
 
       # otherwise, show.

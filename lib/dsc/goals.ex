@@ -31,8 +31,6 @@ defmodule DriversSeatCoop.Goals do
   This is in the minimum version in which the goals feature
   is available
   """
-  def app_version_min, do: "3.0.6"
-
   def get_goals(user_id, frequency) do
     query_goals()
     |> query_goals_filter_user(user_id)

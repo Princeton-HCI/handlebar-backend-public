@@ -17,8 +17,6 @@ defmodule DriversSeatCoop.Notifications.Oban.CTAGoalsLinkAccounts do
 
   alias DriversSeatCoop.Accounts
   alias DriversSeatCoop.Accounts.User
-  alias DriversSeatCoop.Devices
-  alias DriversSeatCoop.Goals
   alias DriversSeatCoop.Marketing
   alias DriversSeatCoop.OneSignal
   alias DriversSeatCoop.Repo
@@ -30,9 +28,6 @@ defmodule DriversSeatCoop.Notifications.Oban.CTAGoalsLinkAccounts do
       DateTime.utc_now()
       |> DateTime.add(@schedule_future_minutes * -1, :minute)
 
-    current_version_user_ids_qry =
-      Devices.get_user_ids_on_version_or_greater_query(Goals.app_version_min())
-
     user_ids_interested_qry =
       Marketing.query_campaign_participation()
       |> Marketing.query_filter_campaign("goals_survey")
@@ -42,7 +37,6 @@ defmodule DriversSeatCoop.Notifications.Oban.CTAGoalsLinkAccounts do
     included_users =
       Accounts.get_users_query()
       |> Accounts.filter_include_users_without_earnings_query()
-      |> where([u], u.id in subquery(current_version_user_ids_qry))
       |> where([u], u.id in subquery(user_ids_interested_qry))
       |> where([u], u.inserted_at <= ^qulified_after)
       |> select([u], u.id)
