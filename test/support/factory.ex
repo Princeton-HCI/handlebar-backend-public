@@ -583,6 +583,7 @@ defmodule DriversSeatCoop.Factory do
 
     MetroArea.stats_changeset(metro, attrs)
     |> Repo.insert_or_update!()
+    |> Map.put(:geometry, nil)
   end
 
   def create_state(id, attrs \\ %{}) do
@@ -601,6 +602,7 @@ defmodule DriversSeatCoop.Factory do
 
     State.sync_changeset(state, attrs)
     |> Repo.insert_or_update!()
+    |> Map.put(:geometry, nil)
   end
 
   def create_county(id, state_id, attrs \\ %{}) do
@@ -619,6 +621,7 @@ defmodule DriversSeatCoop.Factory do
 
     County.sync_changeset(county, attrs)
     |> Repo.insert_or_update!()
+    |> Map.put(:geometry, nil)
   end
 
   def create_postal_code(id, postal_code, county_id, state_id, metro_area_id \\ nil) do
@@ -637,5 +640,6 @@ defmodule DriversSeatCoop.Factory do
 
     PostalCode.sync_changeset(postal_code, attrs)
     |> Repo.insert_or_update!()
+    |> Map.put(:geometry, nil)
   end
 end

@@ -27,6 +27,10 @@ defmodule DriversSeatCoop.Regions.MetroArea do
     hourly_pay_stat_coverage_count_tasks_services
   )a
 
+  @all_fields_except_geometry (@sync_fields ++ @stats_fields) -- [:geometry]
+
+  def get_non_geometry_fields, do: @all_fields_except_geometry
+
   schema "region_metro_area" do
     field :name, :string
     field :full_name, :string

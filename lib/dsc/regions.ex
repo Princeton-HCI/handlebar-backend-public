@@ -20,7 +20,13 @@ defmodule DriversSeatCoop.Regions do
     |> Repo.one()
   end
 
-  def query_states, do: from(state in State)
+  def query_states do
+    non_geometry_fields = State.get_non_geometry_fields()
+
+    from(state in State,
+      select: ^non_geometry_fields
+    )
+  end
 
   def get_county_by_id(nil = _id), do: nil
 
@@ -30,28 +36,46 @@ defmodule DriversSeatCoop.Regions do
     |> Repo.one()
   end
 
-  def query_counties, do: from(county in County)
+  def query_counties do
+    non_geometry_fields = County.get_non_geometry_fields()
+
+    from(county in County,
+      select: ^non_geometry_fields
+    )
+  end
 
   def get_postal_code(nil, _include_metro_area), do: nil
 
   def get_postal_code(postal_code, include_metro_area) do
+    postal_code_fields = PostalCode.get_non_geometry_fields()
+
     qry =
-      from(postal_code in PostalCode,
-        where: postal_code.postal_code == ^postal_code,
-        limit: 1
-      )
+      from(pc in PostalCode)
+      |> where([pc], pc.postal_code == ^postal_code)
+      |> limit(1)
 
     qry =
       if include_metro_area do
-        from(postal_code in qry,
-          preload: [:metro_area]
-        )
+        postal_code_fields =
+          postal_code_fields ++ [metro_area: MetroArea.get_non_geometry_fields()]
+
+        qry
+        |> preload(:metro_area)
+        |> select(pc, ^postal_code_fields)
       else
         qry
+        |> select(pc, ^postal_code_fields)
       end
 
-    Repo.all(qry)
-    |> Enum.at(0)
+    Repo.one(qry)
+  end
+
+  def query_postal_codes do
+    non_geometry_fields = PostalCode.get_non_geometry_fields()
+
+    from(pc in PostalCode,
+      select: ^non_geometry_fields
+    )
   end
 
   def get_metro_area_by_id(nil), do: nil
@@ -65,11 +89,13 @@ defmodule DriversSeatCoop.Regions do
   def get_metro_area_id_for_point(nil = _point), do: nil
 
   def get_metro_area_id_for_point(%Geo.Point{} = point) do
-    query_metro_areas()
-    |> query_metro_area_contains_point(point)
-    |> select([m], m.id)
-    |> limit(1)
-    |> Repo.one()
+    metro_area =
+      query_metro_areas()
+      |> query_metro_area_contains_point(point)
+      |> limit(1)
+      |> Repo.one()
+
+    if is_nil(metro_area), do: nil, else: Map.get(metro_area, :id)
   end
 
   def get_county_for_point(nil = _point), do: nil
@@ -77,11 +103,6 @@ defmodule DriversSeatCoop.Regions do
   def get_county_for_point(%Geo.Point{} = point) do
     query_counties()
     |> query_county_contains_point(point)
-    |> select([m], %{
-      id: m.id,
-      region_id_state: m.region_id_state,
-      name: m.name
-    })
     |> limit(1)
     |> Repo.one()
   end
@@ -91,13 +112,14 @@ defmodule DriversSeatCoop.Regions do
     |> Repo.all()
   end
 
-  def get_metro_area_ids do
-    query_metro_areas()
-    |> select([m], m.id)
-    |> Repo.all()
+  def query_metro_areas do
+    metro_fields = MetroArea.get_non_geometry_fields()
+
+    from(metro in MetroArea,
+      select: ^metro_fields
+    )
   end
 
-  def query_metro_areas, do: from(metro in MetroArea)
   def query_metro_areas_hourly_pay_stat_coverage_percent(qry, nil, nil), do: qry
 
   def query_metro_areas_hourly_pay_stat_coverage_percent(qry, nil, max),
