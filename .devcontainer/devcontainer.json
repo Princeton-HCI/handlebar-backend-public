@@ -1,9 +1,3 @@
-// {
-//     "image": "hexpm/elixir:1.14.5-erlang-25.3.2.9-debian-buster-20240130",
-//     "name": "dsc-devcontainer",
-//     "onCreateCommand": "elixir --version",
-//     "forwardPorts": [4000]
-//   }
 {
   "dockerComposeFile": [
     "docker-compose.yml"

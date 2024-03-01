@@ -46,16 +46,6 @@ RUN apt-get update && apt-get install -y git curl gnupg lsb-release \
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install -y nodejs
 
-# Set up ASDF
-# RUN git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.1
-# ENV PATH="/root/.asdf/bin:/root/.asdf/shims:${PATH}"
-# RUN asdf plugin add erlang
-# RUN asdf plugin add elixir
-# RUN asdf install erlang 25.3.2.7
-# RUN asdf install elixir 1.14.0-otp-25
-# RUN asdf global erlang 25.3.2.7
-# RUN asdf global elixir 1.14.0-otp-25
-# RUN asdf reshim
 
 # Set up the application
 WORKDIR /app
