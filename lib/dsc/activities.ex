@@ -139,10 +139,21 @@ defmodule DriversSeatCoop.Activities do
   def get_activities_query(user_id_or_ids) do
     user_id_or_ids = List.wrap(user_id_or_ids)
 
-    from(activity in Activity,
-      where: activity.user_id in ^user_id_or_ids,
-      where: activity.deleted == false
-    )
+    # when only 1 user_id, perform use an "equals" predicate
+    # instead of an "in" to improve query performance
+    if Enum.count(user_id_or_ids) == 1 do
+      user_id_or_ids = Enum.at(user_id_or_ids, 0)
+
+      from(activity in Activity,
+        where: activity.user_id == ^user_id_or_ids,
+        where: activity.deleted == false
+      )
+    else
+      from(activity in Activity,
+        where: activity.user_id in ^user_id_or_ids,
+        where: activity.deleted == false
+      )
+    end
   end
 
   def filter_activities_require_notification(query) do

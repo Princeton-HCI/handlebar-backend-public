@@ -5,6 +5,10 @@ defmodule DriversSeatCoop.Regions.PostalCode do
   @sync_required_fields ~w(id postal_code geometry region_id_county region_id_state)a
   @sync_optional_fields ~w(region_id_metro_area)a
 
+  @all_fields_except_geometry (@sync_required_fields ++ @sync_optional_fields) -- [:geometry]
+
+  def get_non_geometry_fields, do: @all_fields_except_geometry
+
   schema "region_postal_code" do
     field :postal_code, :string
     field :geometry, Geo.PostGIS.Geometry
