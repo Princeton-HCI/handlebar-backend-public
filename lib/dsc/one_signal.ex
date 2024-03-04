@@ -331,7 +331,7 @@ defmodule DriversSeatCoop.OneSignal do
   def send_shift_start_reminder(%User{} = user, shift_start_time_local) do
     if User.can_receive_start_shift_notification(user) do
       send_notification(user, :start_shift_reminder, %MessageTemplateParams{
-        template_id: "234be7ad-e1d3-4996-a001-de0b06fac100",
+        template_id: "70bfc862-0d8a-41b2-9ba5-ca70ee47ac75",
         include_external_user_ids: [user.id],
         additional_data: %{
           shift_start_time_local: shift_start_time_local
