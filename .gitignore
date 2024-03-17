@@ -26,3 +26,7 @@ dsc-*.tar
 # we ignore priv/static. You may want to comment
 # this depending on your deployment strategy.
 # /priv/static/
+
+.env*
+.DS_Store
+cloud-sql-proxy
