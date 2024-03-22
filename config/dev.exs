@@ -10,7 +10,7 @@ if is_nil(database_url) do
     username: "postgres",
     password: "postgres",
     database: "drivers_seat_coop_dev",
-    hostname: "db",
+    hostname: "localhost",
     pool_size: 10,
     show_sensitive_data_on_connection_error: true,
     stacktrace: true,

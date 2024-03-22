@@ -28,9 +28,16 @@ body {
 }
 
 h1 {
-  font-size: 160%;
+  font-size: 26px;
   font-weight: normal;
   line-height: 1.2;
+
+  a {
+    font-size: 26px;
+    font-weight: normal;
+    line-height: 1.2;
+  }
+
 }
 
 h2 {
