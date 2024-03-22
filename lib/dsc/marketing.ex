@@ -3,6 +3,7 @@ defmodule DriversSeatCoop.Marketing do
   alias DriversSeatCoop.Devices.Device
   alias DriversSeatCoop.Marketing.CampaignParticipant
   alias DriversSeatCoop.Marketing.Campaigns.GoalsSurvey
+  alias DriversSeatCoop.Marketing.Campaigns.JoinCommunity
   alias DriversSeatCoop.Marketing.Campaigns.MileageTrackingIntroSurvey
   alias DriversSeatCoop.Marketing.Campaigns.OnboardingChecklist
   alias DriversSeatCoop.Marketing.Campaigns.WelcomeToWaoDriversSeat
@@ -29,7 +30,8 @@ defmodule DriversSeatCoop.Marketing do
       WelcomeToWaoDriversSeat.instance(),
       OnboardingChecklist.instance(),
       GoalsSurvey.instance(),
-      MileageTrackingIntroSurvey.instance()
+      MileageTrackingIntroSurvey.instance(),
+      JoinCommunity.instance()
     ]
   end
 
