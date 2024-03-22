@@ -87,7 +87,7 @@ if config_env() == :prod do
     client_id: System.get_env("ARGYLE_ID"),
     client_secret: System.get_env("ARGYLE_SECRET"),
     enable_background_tasks?: System.get_env("ARGYLE_ENABLE_BACKGROUND_TASKS") == "true",
-    url: "https://api.argyle.com/v1/"
+    url: System.get_env("ARGYLE_URL")
 
   config :dsc, DriversSeatCoop.B2,
     key_id: System.get_env("B2_KEY_ID"),
