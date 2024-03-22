@@ -5,6 +5,7 @@ defmodule DriversSeatCoop.Marketing do
   alias DriversSeatCoop.Marketing.Campaigns.GoalsSurvey
   alias DriversSeatCoop.Marketing.Campaigns.MileageTrackingIntroSurvey
   alias DriversSeatCoop.Marketing.Campaigns.OnboardingChecklist
+  alias DriversSeatCoop.Marketing.Campaigns.WelcomeToWaoDriversSeat
   alias DriversSeatCoop.Marketing.CampaignState
   alias DriversSeatCoop.Marketing.PopulationMember
   alias DriversSeatCoop.Marketing.PopulationTypes.ActivitiesNotification
@@ -25,6 +26,7 @@ defmodule DriversSeatCoop.Marketing do
 
   def get_active_campaigns do
     [
+      WelcomeToWaoDriversSeat.instance(),
       OnboardingChecklist.instance(),
       GoalsSurvey.instance(),
       MileageTrackingIntroSurvey.instance()
