@@ -120,3 +120,8 @@ config :dsc, DriversSeatCoopWeb.OutOfDateAppVersionPlug,
   store_url_ios: System.get_env("MOBILE_APP_STORE_URL_IOS"),
   store_url_android: System.get_env("MOBILE_APP_STORE_URL_ANDROID"),
   store_url_default: System.get_env("MOBILE_APP_STORE_URL_DEFAULT")
+
+config :dsc, DriversSeatCoop.LegacyDSC,
+  url: System.get_env("LEGACY_DSC_URL"),
+  login: System.get_env("LEGACY_DSC_LOGIN"),
+  password: System.get_env("LEGACY_DSC_PASSWORD")
