@@ -127,6 +127,7 @@ defmodule DriversSeatCoop.CommunityInsights do
       # added for performance
       where: a.working_day_start >= ^start_window,
       where: not a.deleted,
+      where: not is_nil(a.employer_service_class_id),
       where: ah.week_start_date >= ^start_window,
       where: ah.week_start_date <= ^end_window,
       group_by: [
