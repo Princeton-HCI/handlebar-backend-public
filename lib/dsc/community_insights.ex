@@ -5,6 +5,7 @@ defmodule DriversSeatCoop.CommunityInsights do
   alias DriversSeatCoop.Activities.Activity
   alias DriversSeatCoop.Activities.ActivityHour
   alias DriversSeatCoop.CommunityInsights.AverageHourlyPayStat
+  alias DriversSeatCoop.CommunityInsights.AverageHourlyPayStatDSC
   alias DriversSeatCoop.Employers.EmployerServiceClass
   alias DriversSeatCoop.Regions
   alias DriversSeatCoop.Regions.MetroArea
@@ -126,6 +127,7 @@ defmodule DriversSeatCoop.CommunityInsights do
       # added for performance
       where: a.working_day_start >= ^start_window,
       where: not a.deleted,
+      where: not is_nil(a.employer_service_class_id),
       where: ah.week_start_date >= ^start_window,
       where: ah.week_start_date <= ^end_window,
       group_by: [
@@ -544,6 +546,11 @@ defmodule DriversSeatCoop.CommunityInsights do
 
   def query, do: from(stat in AverageHourlyPayStat)
 
+  @doc """
+  Queries data captured from the DSC Community insights prior to transition to WAO
+  """
+  def query_legacy, do: from(stat in AverageHourlyPayStatDSC)
+
   def query_filter_id(qry, id_or_ids, include \\ true) do
     id_or_ids = List.wrap(id_or_ids)
 
@@ -629,15 +636,28 @@ defmodule DriversSeatCoop.CommunityInsights do
     end
   end
 
-  def get_summary(metro_area_id, employer_service_class_ids \\ nil, service_class_ids \\ nil) do
+  # Given a list of lists of stats, pick the most reliable stat from each group
+  defp select_best_stats(stat_grps) do
+    Enum.map(stat_grps, fn stat_grp ->
+      Enum.sort_by(stat_grp, fn stat -> stat.count_users end, :desc)
+      |> Enum.at(0)
+    end)
+  end
+
+  defp get_summary_data(
+         qry,
+         metro_area_id,
+         employer_service_class_ids,
+         service_class_ids
+       ) do
     most_recent_week =
-      query()
+      qry
       |> query_filter_metro_area(metro_area_id)
       |> select([stat], max(stat.week_start_date))
       |> Repo.one()
 
     qry =
-      query()
+      qry
       |> preload(:employer_service_class)
       |> query_filter_metro_area(metro_area_id)
       |> query_filter_week(most_recent_week)
@@ -652,8 +672,36 @@ defmodule DriversSeatCoop.CommunityInsights do
         do: qry,
         else: query_filter_service_class(qry, service_class_ids)
 
+    {most_recent_week, Repo.all(qry)}
+  end
+
+  def get_summary(metro_area_id, employer_service_class_ids \\ nil, service_class_ids \\ nil) do
+    {most_recent_week_wao, stats_wao} =
+      get_summary_data(
+        query(),
+        metro_area_id,
+        employer_service_class_ids,
+        service_class_ids
+      )
+
+    {most_recent_week_dsc, stats_dsc} =
+      get_summary_data(
+        query_legacy(),
+        metro_area_id,
+        employer_service_class_ids,
+        service_class_ids
+      )
+
+    current_stats =
+      (stats_wao ++ stats_dsc)
+      |> Enum.group_by(fn stat ->
+        {stat.day_of_week, stat.hour_local, stat.employer_service_class_id}
+      end)
+      |> Map.values()
+      |> select_best_stats()
+
     stat_grps =
-      Repo.all(qry)
+      current_stats
       |> Enum.group_by(fn stat -> {stat.day_of_week, stat.hour_local} end)
 
     stat_grps
@@ -677,7 +725,7 @@ defmodule DriversSeatCoop.CommunityInsights do
 
       %{
         metro_area_id: metro_area_id,
-        week_start_date: most_recent_week,
+        week_start_date: most_recent_week_wao || most_recent_week_dsc,
         day_of_week: day_of_week,
         hour_local: hour_local,
         earnings_avg_hr_cents: round(weighted_earnings / weighted_tasks),
@@ -730,15 +778,16 @@ defmodule DriversSeatCoop.CommunityInsights do
     end)
   end
 
-  def get_trend(
-        metro_area_id,
-        day_of_week,
-        hour_local,
-        employer_service_class_ids \\ nil,
-        service_class_ids \\ nil
-      ) do
+  defp get_trend_data(
+         qry,
+         metro_area_id,
+         day_of_week,
+         hour_local,
+         employer_service_class_ids,
+         service_class_ids
+       ) do
     qry =
-      query()
+      qry
       |> preload(:employer_service_class)
       |> query_filter_metro_area(metro_area_id)
       |> query_filter_day_of_week(day_of_week)
@@ -755,7 +804,44 @@ defmodule DriversSeatCoop.CommunityInsights do
         else: query_filter_service_class(qry, service_class_ids)
 
     Repo.all(qry)
-    |> Enum.map(fn stat ->
+  end
+
+  def get_trend(
+        metro_area_id,
+        day_of_week,
+        hour_local,
+        employer_service_class_ids \\ nil,
+        service_class_ids \\ nil
+      ) do
+    stats_wao =
+      get_trend_data(
+        query(),
+        metro_area_id,
+        day_of_week,
+        hour_local,
+        employer_service_class_ids,
+        service_class_ids
+      )
+
+    stats_dsc =
+      get_trend_data(
+        query_legacy(),
+        metro_area_id,
+        day_of_week,
+        hour_local,
+        employer_service_class_ids,
+        service_class_ids
+      )
+
+    stats =
+      (stats_wao ++ stats_dsc)
+      |> Enum.group_by(fn stat ->
+        {stat.week_start_date, stat.day_of_week, stat.hour_local, stat.employer_service_class_id}
+      end)
+      |> Map.values()
+      |> select_best_stats()
+
+    Enum.map(stats, fn stat ->
       stat
       |> Map.take(@trend_fields)
       |> Map.put(:service_class_id, stat.employer_service_class.service_class_id)
