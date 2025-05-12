@@ -161,6 +161,8 @@ defmodule DriversSeatCoopWeb.Router do
         scope "/performance" do
           get "/:frequency/:window_date", GoalsController, :performance
         end
+
+        resources "/collectors", CrepeCollectorController, only: [:index, :show]
       end
     end
 
