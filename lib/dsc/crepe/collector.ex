@@ -9,7 +9,7 @@ defmodule DriversSeatCoop.Crepe.Collector do
 
   @optional_fields ~w(description)a
 
-  schema "crepe_collectors" do
+  schema "crepe_collector" do
     field :app_name, :string
     field :app_package, :string
     field :description, :string
