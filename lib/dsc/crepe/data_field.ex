@@ -8,6 +8,8 @@ defmodule DriversSeatCoop.Crepe.DataField do
     collector_id
   )a
 
+  @optional_fields ~w()a
+
   schema "crepe_data_field" do
     field :graph_query, :string
     field :name, :string

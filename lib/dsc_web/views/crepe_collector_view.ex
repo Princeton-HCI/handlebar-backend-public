@@ -5,17 +5,13 @@ defmodule DriversSeatCoopWeb.CrepeCollectorView do
     %{data: render_many(collectors, __MODULE__, "collector.json")}
   end
 
-  def render("show.json", %{collector: collector}) do
-    %{data: render_one(collector, __MODULE__, "collector.json")}
-  end
-
   def render("collector.json", %{collector: collector}) do
     %{
       collectorId: collector.id,
       appName: collector.app_name,
       appPackage: collector.app_package,
       description: collector.description,
-      datafields: render_many(collector.data_fields, __MODULE__, "data_field.json")
+      datafields: render_many(collector.data_fields, __MODULE__, "data_field.json", as: :data_field)
     }
   end
 
