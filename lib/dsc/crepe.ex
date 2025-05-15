@@ -10,10 +10,8 @@ defmodule DriversSeatCoop.Crepe do
   Creates a crepe_event.
   """
   def create_crepe_event(attrs, user_id) do
-    attrs_with_user = Map.put(attrs, "user_id", user_id)
-
-    %CrepeEvent{}
-    |> CrepeEvent.changeset(attrs_with_user)
+    %CrepeEvent{user_id: user_id}
+    |> CrepeEvent.changeset(attrs)
     |> Repo.insert()
   end
 end
