@@ -7,6 +7,6 @@ defmodule DriversSeatCoopWeb.CrepeCollectorController do
 
   def index(conn, _params) do
     collectors = Crepe.list_collectors()
-    render(conn, "index.json", collectors: collectors)
+    render(conn, "index.json", %{collectors: collectors})
   end
 end

@@ -1,7 +1,17 @@
-defmodule DriversSeatCoop.Repo.Migrations.CreateCrepeDataFieldTable do
+defmodule DriversSeatCoop.Repo.Migrations.CreateCrepeTables do
   use Ecto.Migration
 
   def change do
+    create table(:crepe_collector) do
+      add :app_name, :string, null: false
+      add :app_package, :string, null: false
+      add :description, :string
+
+      timestamps()
+    end
+
+    create index(:crepe_collector, [:app_package])
+
     create table(:crepe_data_field) do
       add :name, :string, null: false
       add :graph_query, :string, null: false

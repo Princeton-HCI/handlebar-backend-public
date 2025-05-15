@@ -2,7 +2,7 @@ defmodule DriversSeatCoopWeb.CrepeCollectorView do
   use DriversSeatCoopWeb, :view
 
   def render("index.json", %{collectors: collectors}) do
-    %{data: render_many(collectors, __MODULE__, "collector.json")}
+    %{data: render_many(collectors, __MODULE__, "collector.json", as: :collector)}
   end
 
   def render("collector.json", %{collector: collector}) do
