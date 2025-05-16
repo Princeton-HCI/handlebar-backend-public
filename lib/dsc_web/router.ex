@@ -115,7 +115,6 @@ defmodule DriversSeatCoopWeb.Router do
       pipe_through :authenticated_and_terms_required
 
       resources "/points", PointController, only: [:create]
-      resources "/crepe_event", CrepeEventController, only: [:create]
 
       resources "/referral_source", ReferralSourceController, [:index, :show]
       resources "/shift", ShiftController
@@ -162,6 +161,10 @@ defmodule DriversSeatCoopWeb.Router do
         scope "/performance" do
           get "/:frequency/:window_date", GoalsController, :performance
         end
+      end
+
+      scope "/crepe" do
+        resources "/event", CrepeEventController, only: [:create]
       end
     end
 
