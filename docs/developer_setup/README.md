@@ -62,6 +62,11 @@ https://devheroes.io/en/erlang-elixir-macos-m1/
    asdf global elixir 1.14.0-otp-25
    ```
 
+   Note: for installs on Mac M1 processors, consider reviewing these resources:
+
+   1. https://github.com/asdf-vm/asdf-erlang?tab=readme-ov-file#dealing-with-openssl-issues-on-macos
+   2. https://elixirforum.com/t/cant-install-erlang-27-2-4-openssl-issues-macos-sequoia/70038/7
+
 4. **Get Dependencies** <br/>
    Open a new shell.  You may be asked to confirm installation (select Y)
 
