@@ -86,6 +86,7 @@ defmodule DriversSeatCoopWeb.Router do
 
   scope "/api", DriversSeatCoopWeb do
     pipe_through :api
+
     resources "/users", UserController, only: [:create]
     get "/users/lookup/:email", UserController, :lookup
     resources "/sessions", SessionController, only: [:create]
@@ -161,6 +162,10 @@ defmodule DriversSeatCoopWeb.Router do
         scope "/performance" do
           get "/:frequency/:window_date", GoalsController, :performance
         end
+      end
+
+      scope "/crepe" do
+        resources "/collector", CrepeCollectorController, only: [:index]
       end
     end
 
