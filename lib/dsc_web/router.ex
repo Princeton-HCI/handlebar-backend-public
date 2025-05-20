@@ -166,6 +166,7 @@ defmodule DriversSeatCoopWeb.Router do
 
       scope "/crepe" do
         resources "/collector", CrepeCollectorController, only: [:index]
+        resources "/event", CrepeEventController, only: [:create]
       end
     end
 
