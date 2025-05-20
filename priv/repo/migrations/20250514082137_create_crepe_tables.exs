@@ -25,9 +25,9 @@ defmodule DriversSeatCoop.Repo.Migrations.CreateCrepeTables do
     create unique_index(:crepe_data_field, [:collector_id, :name], name: :crepe_data_field_collector_name_index)
 
     create table(:crepe_event) do
-      add :data_field_id, :string, null: false
       add :collected_at, :utc_datetime, null: false
       add :content, :text, null: false
+      add :data_field_id, references(:crepe_data_field, on_delete: :delete_all), null: false
       add :user_id, references(:users, on_delete: :delete_all), null: false
 
       timestamps()

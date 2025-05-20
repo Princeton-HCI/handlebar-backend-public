@@ -3,7 +3,6 @@ defmodule DriversSeatCoopWeb.CrepeEventValidator do
 
   def create(params) do
     types = %{
-      data_field_id: :string,
       collected_at: :utc_datetime,
       content: :string
     }
@@ -12,7 +11,7 @@ defmodule DriversSeatCoopWeb.CrepeEventValidator do
 
     {data, types}
     |> Changeset.cast(params, Map.keys(types))
-    |> Changeset.validate_required([:data_field_id, :collected_at, :content])
+    |> Changeset.validate_required([:collected_at, :content])
     |> Changeset.apply_action(:insert)
   end
 end
