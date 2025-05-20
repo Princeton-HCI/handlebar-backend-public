@@ -95,8 +95,11 @@ defmodule DriversSeatCoopWeb.Router do
     get "/referral_source/lookup/:code", ReferralSourceController, :lookup
     get "/terms/public", TermsController, :public
     post "/help/request/public", HelpController, :create
-
     post "/argyle_event_webhook", ArgyleWebhookController, :create
+
+    scope "/crepe" do
+      resources "/collector", CrepeCollectorController, only: [:index]
+    end
 
     scope "/" do
       pipe_through :authenticated
@@ -165,7 +168,6 @@ defmodule DriversSeatCoopWeb.Router do
       end
 
       scope "/crepe" do
-        resources "/collector", CrepeCollectorController, only: [:index]
         resources "/event", CrepeEventController, only: [:create]
       end
     end
