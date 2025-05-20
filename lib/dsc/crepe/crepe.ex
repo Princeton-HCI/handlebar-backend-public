@@ -4,6 +4,7 @@ defmodule DriversSeatCoop.Crepe do
   """
   import Ecto.Query, warn: false
   alias DriversSeatCoop.Crepe.CrepeEvent
+  alias DriversSeatCoop.Crepe.Collector
   alias DriversSeatCoop.Repo
 
   @doc """
