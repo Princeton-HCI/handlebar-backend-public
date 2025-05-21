@@ -3,8 +3,8 @@ defmodule DriversSeatCoop.Crepe do
   The Crepe context.
   """
   import Ecto.Query, warn: false
-  alias DriversSeatCoop.Crepe.CrepeEvent
   alias DriversSeatCoop.Crepe.Collector
+  alias DriversSeatCoop.Crepe.CrepeEvent
   alias DriversSeatCoop.Repo
 
   @doc """
