@@ -1,6 +1,7 @@
 defmodule DriversSeatCoop.Crepe.Collector do
   use Ecto.Schema
   import Ecto.Changeset
+  alias DriversSeatCoop.Crepe.DataField
 
   @required_fields ~w(
     app_name
@@ -14,7 +15,7 @@ defmodule DriversSeatCoop.Crepe.Collector do
     field :app_package, :string
     field :description, :string
 
-    has_many :data_fields, DriversSeatCoop.Crepe.DataField
+    has_many :data_fields, DataField
 
     timestamps()
   end

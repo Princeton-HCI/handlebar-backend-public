@@ -19,8 +19,14 @@ defmodule DriversSeatCoop.Crepe do
   Creates a crepe_event.
   """
   def create_crepe_event(attrs, user_id) do
-    %CrepeEvent{user_id: user_id}
-    |> CrepeEvent.changeset(attrs)
-    |> Repo.insert()
+    # TODO: Define notification behavior here based on user and/or data field
+    notification = nil
+
+    with {:ok, crepe_event} <-
+      %CrepeEvent{user_id: user_id}
+      |> CrepeEvent.changeset(attrs)
+      |> Repo.insert() do
+      {:ok, %{crepe_event: crepe_event, notification: notification}}
+    end
   end
 end
