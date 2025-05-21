@@ -22,7 +22,10 @@ defmodule DriversSeatCoop.Repo.Migrations.CreateCrepeTables do
 
     create index(:crepe_data_field, [:collector_id])
     create index(:crepe_data_field, [:name])
-    create unique_index(:crepe_data_field, [:collector_id, :name], name: :crepe_data_field_collector_name_index)
+
+    create unique_index(:crepe_data_field, [:collector_id, :name],
+             name: :crepe_data_field_collector_name_index
+           )
 
     create table(:crepe_event) do
       add :collected_at, :utc_datetime, null: false

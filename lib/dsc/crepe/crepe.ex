@@ -23,9 +23,9 @@ defmodule DriversSeatCoop.Crepe do
     notification = nil
 
     with {:ok, crepe_event} <-
-      %CrepeEvent{user_id: user_id}
-      |> CrepeEvent.changeset(attrs)
-      |> Repo.insert() do
+           %CrepeEvent{user_id: user_id}
+           |> CrepeEvent.changeset(attrs)
+           |> Repo.insert() do
       {:ok, %{crepe_event: crepe_event, notification: notification}}
     end
   end

@@ -8,7 +8,8 @@ defmodule DriversSeatCoopWeb.CrepeEventController do
 
   def create(conn, params) do
     with {:ok, params} <- DriversSeatCoopWeb.CrepeEventValidator.create(params),
-         {:ok, %{crepe_event: _crepe_event, notification: notification}} <- Crepe.create_crepe_event(params, conn.assigns.user.id) do
+         {:ok, %{crepe_event: _crepe_event, notification: notification}} <-
+           Crepe.create_crepe_event(params, conn.assigns.user.id) do
       conn
       |> put_status(:created)
       |> render("success.json", notification: notification)
