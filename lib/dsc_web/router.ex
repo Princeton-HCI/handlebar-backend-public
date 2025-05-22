@@ -86,6 +86,7 @@ defmodule DriversSeatCoopWeb.Router do
 
   scope "/api", DriversSeatCoopWeb do
     pipe_through :api
+
     resources "/users", UserController, only: [:create]
     get "/users/lookup/:email", UserController, :lookup
     resources "/sessions", SessionController, only: [:create]
@@ -94,8 +95,11 @@ defmodule DriversSeatCoopWeb.Router do
     get "/referral_source/lookup/:code", ReferralSourceController, :lookup
     get "/terms/public", TermsController, :public
     post "/help/request/public", HelpController, :create
-
     post "/argyle_event_webhook", ArgyleWebhookController, :create
+
+    scope "/crepe" do
+      resources "/collector", CrepeCollectorController, only: [:index]
+    end
 
     scope "/" do
       pipe_through :authenticated
@@ -161,6 +165,10 @@ defmodule DriversSeatCoopWeb.Router do
         scope "/performance" do
           get "/:frequency/:window_date", GoalsController, :performance
         end
+      end
+
+      scope "/crepe" do
+        resources "/event", CrepeEventController, only: [:create]
       end
     end
 

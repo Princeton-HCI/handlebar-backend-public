@@ -136,6 +136,7 @@ defmodule DriversSeatCoop.Accounts.User do
 
     belongs_to :metro_area, DriversSeatCoop.Regions.MetroArea
     belongs_to :referral_source, DriversSeatCoop.ReferralSource
+    has_many :crepe_events, DriversSeatCoop.Crepe.CrepeEvent
 
     field :is_demo_account, :boolean, default: false
 
