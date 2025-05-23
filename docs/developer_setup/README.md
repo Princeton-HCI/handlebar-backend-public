@@ -196,3 +196,12 @@ note 20240226-10:20p: working on cloud run instead. seems easier to manage from 
 The `run_production_migrations.sh` helper script will create a Cloud Run job
 to make migrations run. This should be invoked upon merging in a change that
 has migrations. TODO: it should be part of the CI pipeline.
+
+If needed, you can then connect to the production database via a tunnel with:
+
+```
+gcloud auth login
+gcloud auth application-default login
+
+./cloud-sql-proxy princeton-hci-wao-dsc:us-central1:drivers-seat --port 54322
+```
