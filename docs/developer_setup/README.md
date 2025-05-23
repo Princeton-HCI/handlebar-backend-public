@@ -191,3 +191,8 @@ On the container, the unix socket will be mounted at `/cloudsql`.
 note 20240226-10:20p: working on cloud run instead. seems easier to manage from a CD perspective.
 
 
+## Running migrations after merging to main
+
+The `run_production_migrations.sh` helper script will create a Cloud Run job
+to make migrations run. This should be invoked upon merging in a change that
+has migrations. TODO: it should be part of the CI pipeline.
