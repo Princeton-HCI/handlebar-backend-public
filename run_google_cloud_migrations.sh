@@ -1,5 +1,27 @@
 #!/bin/bash
 
+# Check if environment argument is provided
+if [ "$1" != "production" ] && [ "$1" != "staging" ]; then
+  echo "Error: Please specify either 'production' or 'staging' as an argument"
+  echo "Usage: $0 [production|staging]"
+  exit 1
+fi
+
+# Set environment-specific variables
+if [ "$1" = "production" ]; then
+  export CLOUD_SQL_CONNECTION_ID="princeton-hci-wao-dsc:us-central1:drivers-seat"
+  export DB_NAME="drivers_seat_coop_prod"
+  # prompt for confirmation given this is prod
+  read -p "Are you sure you want to run migrations on the **PRODUCTION** database? (y/n): " confirm
+  if [ "$confirm" != "y" ]; then
+    echo "Aborting..."
+    exit 1
+  fi
+else
+  export CLOUD_SQL_CONNECTION_ID="princeton-hci-wao-dsc:us-central1:dsc-staging"
+  export DB_NAME="drivers_seat_coop_staging"
+fi
+
 # --- Configuration ---
 # All set based on your provided information
 # ---------------------
@@ -13,18 +35,16 @@ export REGION="us-central1"
 # Full Docker image URL (already built and pushed)
 # Note: Using the @sha256 digest ensures you run the *exact* image version.
 # export FULL_IMAGE_URL="us-central1-docker.pkg.dev/princeton-hci-wao-dsc/cloud-run-source-deploy/dsc-api/dsc-api-service@sha256:7c39ab1751fa135ebce3daa0eaba814f3628c67ac662c676bfa6f299999999f9"
+echo "Go to https://console.cloud.google.com/artifacts/docker/princeton-hci-wao-dsc/us-central1/cloud-run-source-deploy?inv=1&invt=AbzUxA&project=princeton-hci-wao-dsc"
+echo "and find the image for the environment you want to run migrations for. Click 'Copy path' at the top of the page and paste it here."
 read -p "Enter the full Docker image URL (including @sha256 digest): " FULL_IMAGE_URL
 
 # Elixir Release Name (from your _build/prod/rel/dsc/bin/migrate)
 export ELIXIR_RELEASE_NAME="dsc"
 
-# Cloud SQL Connection ID
-export CLOUD_SQL_CONNECTION_ID="princeton-hci-wao-dsc:us-central1:drivers-seat"
-
 # Database Details
 read -s -p "Enter your Cloud SQL Database Password for 'postgres' user: " DB_PASSWORD; echo
 export DB_USERNAME="postgres"
-export DB_NAME="drivers_seat_coop_prod"
 
 # Get SECRET_KEY_BASE
 read -s -p "Enter your SECRET_KEY_BASE: " SECRET_KEY_BASE; echo
