@@ -23,6 +23,10 @@ jobs:
           git config user.name "The WAO Bot"
           git config user.email "thewao@princeton.edu"
 
+      - name: Set up git authentication for pull
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.THEWAO_BOT_PERSONAL_ACCESS_TOKEN_FOR_GITHUB_ACTIONS }}@github.com/Princeton-HCI/dsc-api.git
+
       - name: Pull latest changes from staging
         run: git pull --rebase origin staging
 
