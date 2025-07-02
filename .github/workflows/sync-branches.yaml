@@ -23,6 +23,9 @@ jobs:
           git config user.name "The WAO Bot"
           git config user.email "thewao@princeton.edu"
 
+      - name: Pull latest changes from staging
+        run: git pull --rebase origin staging
+
       - name: Push to Demo Branch
         uses: ad-m/github-push-action@master
         with:
