@@ -1,0 +1,36 @@
+name: Synced Branches
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  sync-branches:
+    runs-on: ubuntu-latest
+    environment: Staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
+
+      - name: Setup Git User
+        run: |
+          git config user.name "The WAO Bot"
+          git config user.email "thewao@princeton.edu"
+
+      - name: Push to Demo Branch
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.THEWAO_BOT_PERSONAL_ACCESS_TOKEN_FOR_GITHUB_ACTIONS }}
+          branch: demo
+
+      - name: Push to Staging Branch
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.THEWAO_BOT_PERSONAL_ACCESS_TOKEN_FOR_GITHUB_ACTIONS }}
+          branch: staging
