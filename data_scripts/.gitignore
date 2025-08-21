@@ -1,0 +1,6 @@
+# CSV files, e.g., exports from SQL
+*.csv
+.env
+
+# keep .env.example
+!.env.example
