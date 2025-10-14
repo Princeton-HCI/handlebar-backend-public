@@ -4,12 +4,10 @@ defmodule DriversSeatCoop.ExternalServices do
   alias DriversSeatCoop.Accounts
   alias DriversSeatCoop.Accounts.User
   alias DriversSeatCoop.Accounts.UserServiceIdentifier
-  alias DriversSeatCoop.Argyle
   alias DriversSeatCoop.Mixpanel
   alias DriversSeatCoop.Repo
 
   @services [
-    :argyle,
     :mixpanel
   ]
 
@@ -172,29 +170,6 @@ defmodule DriversSeatCoop.ExternalServices do
   def delete_user(user_id) do
     user = Accounts.get_user!(user_id)
     delete_user(user)
-  end
-
-  def delete_user(%User{} = user, service) when service in ["argyle", :argyle] do
-    if is_nil(user.argyle_user_id) do
-      {:ok, :no_argyle_account}
-    else
-      case Argyle.delete(user.argyle_user_id) do
-        {:ok, _} ->
-          argyle_attrs = %{
-            argyle_user_id: nil,
-            argyle_token: nil,
-            argyle_accounts: nil,
-            service_names: nil
-          }
-
-          Accounts.update_user(user, argyle_attrs)
-
-          {:ok, :deleted}
-
-        error ->
-          {:error, [{user.argyle_user_id, error}]}
-      end
-    end
   end
 
   def delete_user(%User{} = user, service) do

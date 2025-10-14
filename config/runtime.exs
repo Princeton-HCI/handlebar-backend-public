@@ -83,12 +83,6 @@ if config_env() == :prod do
   config :dsc,
     terms_v1_id: terms_v1_id
 
-  config :dsc, DriversSeatCoop.Argyle,
-    client_id: System.get_env("ARGYLE_ID"),
-    client_secret: System.get_env("ARGYLE_SECRET"),
-    enable_background_tasks?: System.get_env("ARGYLE_ENABLE_BACKGROUND_TASKS") == "true",
-    url: System.get_env("ARGYLE_URL")
-
   config :dsc, DriversSeatCoop.B2,
     key_id: System.get_env("B2_KEY_ID"),
     application_key: System.get_env("B2_APPLICATION_KEY"),

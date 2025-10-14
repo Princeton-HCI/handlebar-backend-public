@@ -39,11 +39,6 @@ config :argon2_elixir,
   t_cost: 1,
   m_cost: 8
 
-config :dsc, DriversSeatCoop.Argyle,
-  client_id: System.get_env("ARGYLE_ID"),
-  client_secret: System.get_env("ARGYLE_SECRET"),
-  url: "https://api-sandbox.argyle.com/v1/"
-
 config :dsc, DriversSeatCoop.B2,
   key_id: "valid_application_key_id",
   application_key: "valid_application_key",

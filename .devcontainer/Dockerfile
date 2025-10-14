@@ -33,9 +33,6 @@ FROM hexpm/elixir:1.14.5-erlang-25.3.2.9-debian-buster-20240130
 # PAPERTRAIL_API_TOKEN=your_papertrail_api_token \
 # SENTRY_DSN=your_sentry_dsn \
 # RELEASE_LEVEL=your_release_level \
-# ARGYLE_ENABLE_BACKGROUND_TASKS=your_argyle_enable_background_tasks \
-# ARGYLE_ID=your_argyle_id \
-# ARGYLE_SECRET=your_argyle_secret
 
 
 

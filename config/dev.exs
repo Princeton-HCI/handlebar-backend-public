@@ -45,12 +45,6 @@ config :dsc, DriversSeatCoopWeb.Endpoint,
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}
   ]
 
-config :dsc, DriversSeatCoop.Argyle,
-  client_id: System.get_env("ARGYLE_ID"),
-  client_secret: System.get_env("ARGYLE_SECRET"),
-  enable_background_tasks?: false,
-  url: "https://api.argyle.com/v1/"
-
 config :dsc, DriversSeatCoopWeb.Mailer,
   adapter: Swoosh.Adapters.Local,
   from_name: "DriversSeatCoop",

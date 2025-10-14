@@ -197,8 +197,8 @@ defmodule DriversSeatCoop.HubSpot do
       hubspot_property("phone", user.phone_number),
       hubspot_property("firstname", user.first_name),
       hubspot_property("lastname", user.last_name),
-      hubspot_property("country", user.country || user.country_argyle),
-      hubspot_property("zip", user.postal_code || user.postal_code_argyle),
+      hubspot_property("country", user.country),
+      hubspot_property("zip", user.postal_code),
       hubspot_property("became_registered_user_date", user.inserted_at),
       hubspot_property("app_user_id", user.id),
       hubspot_property(

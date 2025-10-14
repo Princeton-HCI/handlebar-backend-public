@@ -60,12 +60,6 @@ defmodule DriversSeatCoop.Accounts do
     |> Repo.all()
   end
 
-  def list_users_with_argyle_linked do
-    User
-    |> where([u], not is_nil(u.argyle_user_id))
-    |> Repo.all()
-  end
-
   def get_users_with_earnings_query do
     from(u in get_users_query())
     |> filter_non_prod_users_query()
@@ -315,10 +309,6 @@ defmodule DriversSeatCoop.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
-  def get_user_by_argyle_user_id(argyle_user_id) do
-    Repo.get_by(User, argyle_user_id: argyle_user_id)
-  end
-
   def get_user(id) do
     Repo.get(User, id)
   end
@@ -521,10 +511,6 @@ defmodule DriversSeatCoop.Accounts do
       # User should not have any external system identifiers, these should be cleaned up first
       Repo.exists?(from(xref in UserServiceIdentifier, where: xref.user_id == ^user.id)) ->
         {:error, :user_has_external_system_identifiers}
-
-      # User should not have an Argyle ID
-      not is_nil(user.argyle_user_id) ->
-        {:error, :user_has_argyle_id}
 
       # User cannot have authored terms of service
       Repo.exists?(from(t in Terms, where: t.user_id == ^user.id)) ->
@@ -761,28 +747,20 @@ defmodule DriversSeatCoop.Accounts do
       text(:last_name)
       text(:phone_number)
       text(:vehicle_make)
-      text(:vehicle_make_argyle)
       text(:vehicle_model)
-      text(:vehicle_model_argyle)
       text(:vehicle_type)
       number(:vehicle_year)
-      number(:vehicle_year_argyle)
       boolean(:contact_permission)
       text(:device_platform)
       text(:focus_group)
       text(:engine_type)
       text(:country)
-      text(:country_argyle)
       text(:postal_code)
-      text(:postal_code_argyle)
       text(:car_ownership)
       text(:role)
       boolean(:deleted)
       text(:timezone)
       text(:timezone_device)
-      text(:timezone_argyle)
-      text(:argyle_token)
-      text(:argyle_user_id)
     end
   end
 

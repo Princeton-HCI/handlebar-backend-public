@@ -4,11 +4,9 @@ Related Projects:
 
 - [Mobile Application (dsc-mobile)](https://github.com/Princeton-HCI/dsc-mobile)
 
-
 The API server:
 
 - Provides an API interface for the app
-- Imports user gig-activities and profile data from Argyle
 - Host static content (for marketing campaigns and for help)
 
 ## Tech Stack
@@ -22,30 +20,32 @@ This project uses:
 - Google Cloud for deployment
 
 ## External Services
-This project uses:
-* [Argyle](https://argyle.com)
-* [Mixpanel](https://mixpanel.com/)
-* [Sentry](https://sentry.io/welcome/)
-* [OneSignal](https://onesignal.com/)
 
+This project uses:
+
+- [Mixpanel](https://mixpanel.com/)
+- [Sentry](https://sentry.io/welcome/)
+- [OneSignal](https://onesignal.com/)
 
 ## Getting Started
-* [Setting-up a Development Environment](/docs/developer_setup/README.md)
-* [Environment Variables](/docs/environment_variables/README.md)
-* [Populating Geosptial Referece Data](/docs/populating_geographies/README.md)
 
+- [Setting-up a Development Environment](/docs/developer_setup/README.md)
+- [Environment Variables](/docs/environment_variables/README.md)
+- [Populating Geosptial Referece Data](/docs/populating_geographies/README.md)
 
 ## Deployment
-* Code is hosted on GitHub
-* The deployment is from Google Cloud
-* There is a staging and a production environemnt
-* Databases are in Google Cloud SQL
+
+- Code is hosted on GitHub
+- The deployment is from Google Cloud
+- There is a staging and a production environemnt
+- Databases are in Google Cloud SQL
 
 ### CI / CD pipeline
-* New commits to main will trigger new builds via Cloud Build
-* Builds in Cloud Build will deploy to Cloud Run
-* `main` corresponds to the production deployment. Merges to `main` will auto-build to production.
-* `staging` corresponds to the staging deployment. Merges to `staging` will auto-build to staging.
+
+- New commits to main will trigger new builds via Cloud Build
+- Builds in Cloud Build will deploy to Cloud Run
+- `main` corresponds to the production deployment. Merges to `main` will auto-build to production.
+- `staging` corresponds to the staging deployment. Merges to `staging` will auto-build to staging.
 
 ### Running migrations after merging to main
 

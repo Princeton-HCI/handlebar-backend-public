@@ -2,9 +2,6 @@
 
 Geospatial reference data supports the following features in Driver's Seat.
 
-* **Community Insights** <br/>
-  Gig Activities (from Argyle) are associated to the metro area in which they occurred (`region_metro_area`).  This is the basis for summarizing average hourly pay for the Community Insights/Average Hourly Pay feature.
-  <br/>
 
 * **User Metro Area Assignment** <br/>
   When a user updates their postal code, it is matched to the `region_postal_code` table and they are associated to a Metro Area.

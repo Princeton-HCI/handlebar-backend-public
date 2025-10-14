@@ -15,13 +15,9 @@ defmodule DriversSeatCoop.Accounts.User do
   # NOTE: role is set through a separate changeset to prevent normal requests
   # from changing it.
   @optional_fields ~w(
-    argyle_accounts
-    argyle_token
-    argyle_user_id
     car_ownership
     contact_permission
     country
-    country_argyle
     deleted
     device_platform
     engine_type
@@ -30,7 +26,6 @@ defmodule DriversSeatCoop.Accounts.User do
     first_name
     focus_group
     gender
-    gender_argyle
     is_demo_account
     is_beta
     last_name
@@ -40,23 +35,18 @@ defmodule DriversSeatCoop.Accounts.User do
     password
     phone_number
     postal_code
-    postal_code_argyle
     referral_code
     remind_shift_end
     remind_shift_start
     service_names
     source
     timezone
-    timezone_argyle
     timezone_device
     unenrolled_research_at
     vehicle_make
-    vehicle_make_argyle
     vehicle_model
-    vehicle_model_argyle
     vehicle_type
     vehicle_year
-    vehicle_year_argyle
     metro_area_id
   )a
 
@@ -68,12 +58,9 @@ defmodule DriversSeatCoop.Accounts.User do
     field :phone_number, :string
 
     field :vehicle_make, :string
-    field :vehicle_make_argyle, :string
     field :vehicle_model, :string
-    field :vehicle_model_argyle, :string
     field :vehicle_type, :string
     field :vehicle_year, :integer
-    field :vehicle_year_argyle, :integer
 
     field :contact_permission, :boolean
     field :device_platform, :string
@@ -81,9 +68,7 @@ defmodule DriversSeatCoop.Accounts.User do
     field :service_names, {:array, :string}
     field :engine_type, :string
     field :country, :string
-    field :country_argyle, :string
     field :postal_code, :string
-    field :postal_code_argyle, :string
     field :opted_out_of_data_sale_at, :naive_datetime_usec
     field :opted_out_of_sensitive_data_use_at, :naive_datetime_usec
     field :car_ownership, :string
@@ -100,7 +85,6 @@ defmodule DriversSeatCoop.Accounts.User do
     field :reset_password_token_expires_at, :naive_datetime_usec
 
     field :gender, :string, default: nil
-    field :gender_argyle, :string, default: nil
     field :opted_out_of_push_notifications, :boolean, default: false
 
     # NOTE: the name of this field would imply that it's a boolean, but it is
@@ -114,21 +98,12 @@ defmodule DriversSeatCoop.Accounts.User do
     field :password, :string, virtual: true
     field :referral_code, :string, virtual: true
 
-    # timezone provided by user, overrides timezone_device and timezone_argyle
+    # timezone provided by user, overrides timezone_device
     field :timezone, :string
 
     # timezone taken from the user's device, backup if user-provided timezone is
     # missing
     field :timezone_device, :string
-
-    # timezone from processing argyle activities in a batch job, backup if all
-    # other timezone fields are missing
-    field :timezone_argyle, :string
-
-    # fields used by argyle_user endpoint
-    field :argyle_accounts, :map
-    field :argyle_token, :string
-    field :argyle_user_id, :string
 
     # fields used to remind users to start/stop shifts
     field :remind_shift_start, :boolean, default: false
@@ -163,8 +138,6 @@ defmodule DriversSeatCoop.Accounts.User do
   def valid_vehicle_types, do: @valid_vehicle_types
   def valid_app_channels, do: @valid_app_channels
 
-  def has_argyle_linked?(%{argyle_user_id: id}), do: not is_nil(id)
-
   @doc """
   Combine first_name and last_name into one name.
   """
@@ -190,8 +163,6 @@ defmodule DriversSeatCoop.Accounts.User do
   def timezone(%{timezone: tz}) when not is_nil(tz), do: tz
 
   def timezone(%{timezone_device: tz}) when not is_nil(tz), do: tz
-
-  def timezone(%{timezone_argyle: tz}) when not is_nil(tz), do: tz
 
   def timezone(_), do: "Etc/UTC"
 
@@ -260,7 +231,6 @@ defmodule DriversSeatCoop.Accounts.User do
       |> validate_inclusion(:is_beta, @valid_app_channels)
       |> validate_inclusion(:role, @valid_roles)
       |> validate_timezone(:timezone)
-      |> validate_timezone(:timezone_argyle)
       |> validate_timezone(:timezone_device)
       |> unique_constraint(:email, name: :users_email_index)
       |> cast_metro_area()
@@ -437,23 +407,18 @@ defmodule DriversSeatCoop.Accounts.User do
   def cast_metro_area(changeset) do
     has_change_postal_code = get_change(changeset, :postal_code, @not_avail) != @not_avail
 
-    has_change_postal_code_argyle =
-      get_change(changeset, :postal_code_argyle, @not_avail) != @not_avail
-
     has_change_metro_area_id = get_change(changeset, :metro_area_id, @not_avail) != @not_avail
 
-    has_change =
-      has_change_postal_code or has_change_postal_code_argyle or has_change_metro_area_id
+    has_change = has_change_postal_code or has_change_metro_area_id
 
     postal_code = get_field(changeset, :postal_code)
-    postal_code_argyle = get_field(changeset, :postal_code_argyle)
     metro_area_id = get_field(changeset, :metro_area_id)
 
     metro_area_id =
       if has_change or is_nil(metro_area_id),
         do:
           Map.get(
-            Regions.get_metro_area_by_postal_code([postal_code, postal_code_argyle]) || %{},
+            Regions.get_metro_area_by_postal_code([postal_code]) || %{},
             :id
           ),
         else: metro_area_id

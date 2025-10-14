@@ -24,7 +24,6 @@ defmodule DriversSeatCoop.Mixpanel do
     "Referral Code",
     "Services",
     "Timezone",
-    "Using Argyle",
     "Vehicle Make",
     "Vehicle Model",
     "Vehicle Type",

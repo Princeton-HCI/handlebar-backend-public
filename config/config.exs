@@ -8,7 +8,6 @@
 import Config
 
 config :dsc,
-  argyle_client: DriversSeatCoop.Argyle,
   ecto_repos: [DriversSeatCoop.Repo],
   namespace: DriversSeatCoop
 
@@ -24,18 +23,12 @@ config :dsc, Oban,
   plugins: [
     {Oban.Plugins.Cron,
      crontab: [
-       # Every day at 01:01 PM UTC
-       {"1 13 * * *", DriversSeatCoop.Argyle.Oban.ExtractArgyleTimezones},
-       # Every day at 02:01 PM UTC
-       {"1 14 * * *", DriversSeatCoop.Argyle.Oban.RefreshTokens},
        # Every 15 minutes
        {"*/15 * * * *", DriversSeatCoop.ScheduledShifts.Oban.UpdateScheduledShiftReminders},
        # Every hour
        {"@hourly", DriversSeatCoop.Notifications.Oban.CheckForNewNotifications},
        # Every 10 minutes
        {"*/10 * * * *", DriversSeatCoop.Earnings.Oban.TriggerUpdateTimespansForOnShiftUsers},
-       # Every 12 hours
-       {"0 */12 * * *", DriversSeatCoop.Argyle.Oban.RefreshUserGigAccounts},
        # The 11th and 21st of the month at 7am UTC
        {"0 7 11,21 * *", DriversSeatCoop.Notifications.Oban.GoalPerformanceUpdate,
         args: %{freq: "month"}},
@@ -63,7 +56,6 @@ config :dsc, Oban,
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7}
   ],
   queues: [
-    argyle_api: 2,
     hubspot_api: 1,
     shift_reminders: 1,
     user_export_request: 1,

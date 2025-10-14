@@ -94,23 +94,6 @@ defmodule DriversSeatCoop.Factory do
     end
   end
 
-  def create_user_with_argyle_fields(attrs \\ %{}) do
-    valid_attrs = %{
-      argyle_user_id: "id",
-      argyle_token: "token",
-      argyle_accounts: nil,
-      service_names: nil
-    }
-
-    user =
-      fetch_or_create_user_id(attrs)
-      |> Accounts.get_user!()
-
-    {:ok, argyle_user} = Accounts.update_user(user, Enum.into(attrs, valid_attrs))
-
-    argyle_user
-  end
-
   def create_point(attrs \\ %{}) do
     valid_attrs = %{
       latitude: 43,
