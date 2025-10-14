@@ -1,8 +1,5 @@
 <section id="torch-toolbar">
   <div class="torch-container">
-    <%= if not is_nil(@user.argyle_user_id) do %>
-      <%= link "Sync Argyle ↻", to: Routes.admin_user_path(@conn, :sync_argyle, @user), method: :post %>
-    <% end %>
     <%= if @user.deleted do %>
       <%= link "Purge 🔥", to: Routes.admin_user_path(@conn, :burninate, @user), method: :post, data: [confirm: "This will completely remove the user from the database. Are you sure?"] %>
     <% end %>
@@ -51,44 +48,6 @@
       <li>
         <div class="torch-show-label">Active?:</div>
         <div class="torch-show-data"><%= if @user.deleted, do: "❌", else: "✅" %></div>
-      </li>
-    </ul>
-    <ul>
-      <li>
-        <div class="torch-show-label">Argyle User ID:</div>
-        <div class="torch-show-data">
-          <%= if is_nil(@user.argyle_user_id) do %>
-            unlinked
-          <% else %>
-            <a href="https://console.argyle.com/users/<%= @user.argyle_user_id %>">
-              <%= @user.argyle_user_id %>
-            </a>
-          <% end %>
-        </div>
-      </li>
-      <li>
-        <div class="torch-show-label">Vehicle make argyle:</div>
-        <div class="torch-show-data"><%= @user.vehicle_make_argyle %></div>
-      </li>
-      <li>
-        <div class="torch-show-label">Vehicle model argyle:</div>
-        <div class="torch-show-data"><%= @user.vehicle_model_argyle %></div>
-      </li>
-      <li>
-        <div class="torch-show-label">Vehicle year argyle:</div>
-        <div class="torch-show-data"><%= @user.vehicle_year_argyle %></div>
-      </li>
-      <li>
-        <div class="torch-show-label">Country argyle:</div>
-        <div class="torch-show-data"><%= @user.country_argyle %></div>
-      </li>
-      <li>
-        <div class="torch-show-label">Postal code argyle:</div>
-        <div class="torch-show-data"><%= @user.postal_code_argyle %></div>
-      </li>
-      <li>
-        <div class="torch-show-label">Timezone argyle:</div>
-        <div class="torch-show-data"><%= @user.timezone_argyle %></div>
       </li>
     </ul>
     <ul>

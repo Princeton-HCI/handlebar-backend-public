@@ -54,6 +54,7 @@ defmodule DriversSeatCoopWeb.Router do
   scope "/", DriversSeatCoopWeb.Web, as: :web do
     pipe_through :browser
 
+    get "/", PageController, :index
     resources "/reset_password", ResetPasswordController, only: [:edit, :update]
   end
 
@@ -72,7 +73,6 @@ defmodule DriversSeatCoopWeb.Router do
       resources "/research_groups", ResearchGroupController
       resources "/users", UserController
       post "/users/burninate/:id", UserController, :burninate
-      post "/users/sync_argyle/:id", UserController, :sync_argyle
 
       # no editing jobs or creating new jobs, only cancelling, retrying, and
       # deleting them
@@ -95,7 +95,6 @@ defmodule DriversSeatCoopWeb.Router do
     get "/referral_source/lookup/:code", ReferralSourceController, :lookup
     get "/terms/public", TermsController, :public
     post "/help/request/public", HelpController, :create
-    post "/argyle_event_webhook", ArgyleWebhookController, :create
 
     scope "/crepe" do
       resources "/collector", CrepeCollectorController, only: [:index]
@@ -110,7 +109,6 @@ defmodule DriversSeatCoopWeb.Router do
       resources "/sessions", SessionController, only: [:index]
       resources "/users", UserController, only: [:show, :update, :delete]
       resources "/data_request", DataRequestController, only: [:create]
-      resources "/argyle_user", ArgyleUserController
       resources "/app_preferences", AppPreferencesController, only: [:index, :update]
       post "/help/request/authenticated", HelpController, :create
     end

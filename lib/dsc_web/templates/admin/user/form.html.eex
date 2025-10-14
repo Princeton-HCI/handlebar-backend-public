@@ -121,11 +121,6 @@
       <%= error_tag f, :timezone %>
     </div>
 
-    <div class="torch-form-group">
-      <%= label f, :argyle_user_id %>
-      <%= text_input f, :argyle_user_id %>
-      <%= error_tag f, :argyle_user_id %>
-    </div>
 
     <div class="torch-submit-form">
       <%= submit "Submit", class: "torch-submit-button" %>

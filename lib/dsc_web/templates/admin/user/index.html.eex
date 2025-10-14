@@ -44,11 +44,6 @@
           <%= filter_string_input(:user, :vehicle_make, @conn.params) %>
         </div>
 
-        <div class="field">
-          <label>Vehicle make argyle</label>
-          <%= filter_select(:user, :vehicle_make_argyle, @conn.params) %>
-          <%= filter_string_input(:user, :vehicle_make_argyle, @conn.params) %>
-        </div>
 
         <div class="field">
           <label>Vehicle model</label>
@@ -56,11 +51,6 @@
           <%= filter_string_input(:user, :vehicle_model, @conn.params) %>
         </div>
 
-        <div class="field">
-          <label>Vehicle model argyle</label>
-          <%= filter_select(:user, :vehicle_model_argyle, @conn.params) %>
-          <%= filter_string_input(:user, :vehicle_model_argyle, @conn.params) %>
-        </div>
 
         <div class="field">
           <label>Vehicle type</label>
@@ -92,11 +82,6 @@
           <%= filter_string_input(:user, :country, @conn.params) %>
         </div>
 
-        <div class="field">
-          <label>Country argyle</label>
-          <%= filter_select(:user, :country_argyle, @conn.params) %>
-          <%= filter_string_input(:user, :country_argyle, @conn.params) %>
-        </div>
 
         <div class="field">
           <label>Postal code</label>
@@ -104,11 +89,6 @@
           <%= filter_string_input(:user, :postal_code, @conn.params) %>
         </div>
 
-        <div class="field">
-          <label>Postal code argyle</label>
-          <%= filter_select(:user, :postal_code_argyle, @conn.params) %>
-          <%= filter_string_input(:user, :postal_code_argyle, @conn.params) %>
-        </div>
 
         <div class="field">
           <label>Car ownership</label>
@@ -134,23 +114,6 @@
           <%= filter_string_input(:user, :timezone_device, @conn.params) %>
         </div>
 
-        <div class="field">
-          <label>Timezone argyle</label>
-          <%= filter_select(:user, :timezone_argyle, @conn.params) %>
-          <%= filter_string_input(:user, :timezone_argyle, @conn.params) %>
-        </div>
-
-        <div class="field">
-          <label>Argyle token</label>
-          <%= filter_select(:user, :argyle_token, @conn.params) %>
-          <%= filter_string_input(:user, :argyle_token, @conn.params) %>
-        </div>
-
-        <div class="field">
-          <label>Argyle user</label>
-          <%= filter_select(:user, :argyle_user_id, @conn.params) %>
-          <%= filter_string_input(:user, :argyle_user_id, @conn.params) %>
-        </div>
 
         <div class="field">
           <label>Deleted</label>
@@ -163,11 +126,6 @@
           <%= filter_number_input(:user, :vehicle_year, @conn.params) %>
         </div>
 
-        <div class="field">
-          <label>Vehicle year argyle</label>
-          <%= number_filter_select(:user, :vehicle_year_argyle, @conn.params) %>
-          <%= filter_number_input(:user, :vehicle_year_argyle, @conn.params) %>
-        </div>
 
         <button type="submit" class="torch-button">Search</button>
         <%= link "Clear Filters", to: Routes.admin_user_path(@conn, :index) %>
