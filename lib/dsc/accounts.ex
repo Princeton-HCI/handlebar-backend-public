@@ -16,14 +16,12 @@ defmodule DriversSeatCoop.Accounts do
   alias DriversSeatCoop.Driving.Point
   alias DriversSeatCoop.Earnings.Timespan
   alias DriversSeatCoop.Earnings.TimespanAllocation
-  alias DriversSeatCoop.Expenses.Expense
   alias DriversSeatCoop.GigAccounts.UserGigAccount
   alias DriversSeatCoop.Goals.Goal
   alias DriversSeatCoop.Goals.GoalMeasurement
   alias DriversSeatCoop.Legal
   alias DriversSeatCoop.Legal.AcceptedTerms
   alias DriversSeatCoop.Legal.Terms
-  alias DriversSeatCoop.ReferralSource
   alias DriversSeatCoop.Repo
   alias DriversSeatCoop.Research
   alias DriversSeatCoop.Research.FocusGroupMembership
@@ -516,16 +514,6 @@ defmodule DriversSeatCoop.Accounts do
         from(p in Point, where: p.user_id == ^user_id)
         |> Driving.delete_points_query_batch(5000)
 
-        # detach referral sources from the user and set them inactive
-        from(rs in ReferralSource, where: rs.user_id == ^user_id)
-        |> Repo.update_all(
-          set: [
-            user_id: nil,
-            is_active: false,
-            updated_at: DateTime.utc_now()
-          ]
-        )
-
         # delete timespan allocations and timespans
         from(alloc in TimespanAllocation,
           join: ts in Timespan,
@@ -554,7 +542,6 @@ defmodule DriversSeatCoop.Accounts do
 
         from(a in Activity, where: a.user_id == ^user_id) |> Repo.delete_all(timeout: :infinity)
         from(a in UserAction, where: a.user_id == ^user_id) |> Repo.delete_all(timeout: :infinity)
-        from(e in Expense, where: e.user_id == ^user_id) |> Repo.delete_all()
         from(s in Shift, where: s.user_id == ^user_id) |> Repo.delete_all()
         from(s in ScheduledShift, where: s.user_id == ^user_id) |> Repo.delete_all()
         from(uga in UserGigAccount, where: uga.user_id == ^user_id) |> Repo.delete_all()

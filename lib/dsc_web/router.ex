@@ -92,7 +92,6 @@ defmodule DriversSeatCoopWeb.Router do
     resources "/sessions", SessionController, only: [:create]
     resources "/reset_password", ResetPasswordController, only: [:create]
     get "/research_groups/lookup/:code", ResearchGroupController, :lookup
-    get "/referral_source/lookup/:code", ReferralSourceController, :lookup
     get "/terms/public", TermsController, :public
     post "/help/request/public", HelpController, :create
 
@@ -117,7 +116,6 @@ defmodule DriversSeatCoopWeb.Router do
 
       resources "/points", PointController, only: [:create]
 
-      resources "/referral_source", ReferralSourceController, [:index, :show]
       resources "/shift", ShiftController
       resources "/scheduled_shifts", ScheduledShiftController, only: [:index, :create]
       get "/user_pay_performance/:user_id", EarningsController, :summary
@@ -127,9 +125,6 @@ defmodule DriversSeatCoopWeb.Router do
       resources "/employers", EmployerController, only: [:index]
 
       post "/shift/update_working_time/:work_date", ShiftController, :update_working_time
-
-      resources "/expenses", ExpenseController
-      post "/expenses/export", ExpenseController, :export
 
       scope "/earnings" do
         get "/summary/:level/latest", EarningsController, :summary_latest

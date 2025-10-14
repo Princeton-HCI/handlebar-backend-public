@@ -4,7 +4,6 @@ defmodule DriversSeatCoopWeb.EarningsController do
   alias DriversSeatCoop.Activities
   alias DriversSeatCoop.Earnings
   alias DriversSeatCoop.Earnings.Oban.ExportUserEarningsQuery
-  alias DriversSeatCoop.Expenses
   alias DriversSeatCoop.Util.DateTimeUtil
 
   def summary_latest(conn, params) do
@@ -74,16 +73,13 @@ defmodule DriversSeatCoopWeb.EarningsController do
         "employer"
       )
 
-    expenses = Expenses.get_total_expenses(user_id, work_date_start, work_date_end)
-
     render(conn, "summary.json",
       data: %{
         work_date_start: work_date_start,
         work_date_end: work_date_end,
         time_and_mileage: time_and_mileage,
         job_earnings: job_earnings,
-        other_earnings: other_earnings,
-        expenses: expenses
+        other_earnings: other_earnings
       }
     )
   end

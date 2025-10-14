@@ -5,8 +5,6 @@ defmodule DriversSeatCoop.Export do
   alias DriversSeatCoop.CSV
   alias DriversSeatCoop.Earnings
   alias DriversSeatCoop.Earnings.Oban.ExportUserEarningsQuery
-  alias DriversSeatCoop.Expenses
-  alias DriversSeatCoop.Expenses.Oban.ExportUserExpensesQuery
   alias DriversSeatCoop.Repo
 
   require Logger
@@ -417,70 +415,6 @@ defmodule DriversSeatCoop.Export do
       end
     end
 
-    defmodule Expenses do
-      alias DriversSeatCoop.Expenses
-      alias DriversSeatCoop.Export
-
-      @expense_template %{
-        id: nil,
-        date: nil,
-        category: nil,
-        is_deductible: nil,
-        amount: nil
-      }
-
-      def export_expenses_for_user_query(user_id, query) do
-        user = Accounts.get_user!(user_id)
-
-        uuid = Ecto.UUID.generate()
-        path = "export_requests/#{user_id}/expenses_#{uuid}.csv"
-
-        {models, columns} =
-          get_export_expenses_details(
-            user,
-            Date.from_iso8601!(Map.get(query, "date_start")),
-            Date.from_iso8601!(Map.get(query, "date_end"))
-          )
-
-        data =
-          CSV.build_csv_stream(models, columns)
-          |> Enum.to_list()
-
-        Export.upload_csv_stream(data, path, false)
-      end
-
-      defp get_export_expenses_details(user, work_date_start, work_date_end) do
-        records =
-          Expenses.list_expenses_by_user_id(user.id, %{
-            since_date: work_date_start,
-            max_date: work_date_end
-          })
-
-        records =
-          Enum.map(records, fn exp ->
-            Map.merge(
-              @expense_template,
-              %{
-                id: exp.id,
-                date: exp.date,
-                category: exp.category,
-                is_deductible:
-                  if Expenses.is_non_deductible_category(exp.category) do
-                    "Not Deductible"
-                  else
-                    "Deductible"
-                  end,
-                amount: Export.round_number((exp.money || 0) / 100)
-              }
-            )
-          end)
-
-        columns = [:id, :date, :category, :amount, :is_deductible]
-
-        {records, columns}
-      end
-    end
-
     def export_all(user_id) do
       DriversSeatCoop.Earnings.get_timespan_years(user_id)
       |> Enum.sort()
@@ -492,17 +426,6 @@ defmodule DriversSeatCoop.Export do
         }
 
         ExportUserEarningsQuery.schedule_job(user_id, params)
-      end)
-
-      DriversSeatCoop.Expenses.get_expense_years(user_id)
-      |> Enum.sort()
-      |> Enum.each(fn year ->
-        params = %{
-          date_start: Date.new!(year, 1, 1),
-          date_end: Date.new!(year, 12, 31)
-        }
-
-        ExportUserExpensesQuery.schedule_job(user_id, params)
       end)
     end
   end
