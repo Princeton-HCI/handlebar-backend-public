@@ -25,13 +25,6 @@ if config_env() == :prod do
     one_signal_api_key: System.get_env("ONE_SIGNAL_API_KEY"),
     one_signal_app_id: System.get_env("ONE_SIGNAL_APP_ID")
 
-  database_url =
-    System.get_env("CLOUD_SQL_CONNECTION_ID") ||
-      raise """
-      environment variable CLOUD_SQL_CONNECTION_ID is missing.
-      For example: project:region:service
-      """
-
   maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
   db_pool_size = System.get_env("POOL_SIZE") || "10"
 

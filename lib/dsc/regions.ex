@@ -135,7 +135,7 @@ defmodule DriversSeatCoop.Regions do
   end
 
   def get_metro_area_for_user(%User{} = user),
-    do: get_metro_area_by_postal_code([user.postal_code, user.postal_code_argyle])
+    do: get_metro_area_by_postal_code([user.postal_code])
 
   def get_metro_area_by_postal_code(postal_code_or_codes) do
     List.wrap(postal_code_or_codes)

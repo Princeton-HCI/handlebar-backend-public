@@ -4,7 +4,6 @@ defmodule DriversSeatCoopWeb.Admin.UserController do
   alias DriversSeatCoop.Accounts
   alias DriversSeatCoop.Accounts.User
   alias DriversSeatCoop.ExternalServices
-  alias DriversSeatCoop.Argyle.Oban.{BackfillArgyleActivities, ImportArgyleProfileInformation}
 
   plug(:put_layout, {DriversSeatCoopWeb.LayoutView, "torch.html"})
 
@@ -82,16 +81,5 @@ defmodule DriversSeatCoopWeb.Admin.UserController do
       |> put_flash(:info, "User purged")
       |> redirect(to: Routes.admin_user_path(conn, :index))
     end
-  end
-
-  def sync_argyle(conn, %{"id" => id}) do
-    user = Accounts.get_user!(id)
-
-    {:ok, _} = BackfillArgyleActivities.schedule_job(user.id)
-    {:ok, _} = ImportArgyleProfileInformation.schedule_job(user.id)
-
-    conn
-    |> put_flash(:info, "Argyle sync scheduled in Oban.")
-    |> redirect(to: Routes.admin_user_path(conn, :show, user))
   end
 end
