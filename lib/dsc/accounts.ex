@@ -11,7 +11,6 @@ defmodule DriversSeatCoop.Accounts do
   alias DriversSeatCoop.Accounts.UserServiceIdentifier
   alias DriversSeatCoop.Activities.Activity
   alias DriversSeatCoop.Activities.ActivityHour
-  alias DriversSeatCoop.AppPreferences.UserAppPreference
   alias DriversSeatCoop.Devices.Device
   alias DriversSeatCoop.Driving
   alias DriversSeatCoop.Driving.Point
@@ -548,7 +547,6 @@ defmodule DriversSeatCoop.Accounts do
         from(g in Goal, where: g.user_id == ^user_id) |> Repo.delete_all()
 
         # order doesn't matter for the rest
-        from(a in UserAppPreference, where: a.user_id == ^user_id) |> Repo.delete_all()
         from(a in AcceptedTerms, where: a.user_id == ^user_id) |> Repo.delete_all()
 
         from(ah in ActivityHour,

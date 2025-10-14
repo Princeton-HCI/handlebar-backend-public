@@ -109,7 +109,6 @@ defmodule DriversSeatCoopWeb.Router do
       resources "/sessions", SessionController, only: [:index]
       resources "/users", UserController, only: [:show, :update, :delete]
       resources "/data_request", DataRequestController, only: [:create]
-      resources "/app_preferences", AppPreferencesController, only: [:index, :update]
       post "/help/request/authenticated", HelpController, :create
     end
 
@@ -126,8 +125,6 @@ defmodule DriversSeatCoopWeb.Router do
 
       resources "/regions/metro_areas", MetroAreaController, only: [:index]
       resources "/employers", EmployerController, only: [:index]
-      post "/analytics/hourly_pay/summary", AverageHourlyPayStatsController, :summary
-      post "/analytics/hourly_pay/trend", AverageHourlyPayStatsController, :trend
 
       post "/shift/update_working_time/:work_date", ShiftController, :update_working_time
 

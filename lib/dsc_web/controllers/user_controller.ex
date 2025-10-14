@@ -4,7 +4,6 @@ defmodule DriversSeatCoopWeb.UserController do
   alias DriversSeatCoop.{Accounts, Authorizer, Shifts}
   alias DriversSeatCoop.Accounts.User
   alias DriversSeatCoop.Legal
-  alias DriversSeatCoop.Notifications.Oban.CTACommunityInsights
   alias DriversSeatCoop.Notifications.Oban.CTAEarningsInsights
   alias DriversSeatCoopWeb.AuthenticationPlug
   alias DriversSeatCoopWeb.UserValidator
@@ -15,7 +14,6 @@ defmodule DriversSeatCoopWeb.UserController do
     with {:ok, %User{} = user} <- Accounts.create_user(user_params) do
       token = Accounts.token_for_user_id(user.id)
       CTAEarningsInsights.schedule_job(user)
-      CTACommunityInsights.schedule_job(user)
 
       # newly created users cannot have an active shift
       user = user |> Map.put(:currently_on_shift, nil)
@@ -72,7 +70,6 @@ defmodule DriversSeatCoopWeb.UserController do
          {:ok, user_params} <- UserValidator.update(user_params),
          {:ok, %User{} = user} <- Accounts.update_user(user, user_params) do
       CTAEarningsInsights.schedule_job(user)
-      CTACommunityInsights.schedule_job(user)
 
       user = put_current_shift(user, Map.get(conn.assigns, :dsc_device))
       user = put_user_agreed_to_current_terms(user)

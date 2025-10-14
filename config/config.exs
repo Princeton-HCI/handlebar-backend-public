@@ -38,17 +38,7 @@ config :dsc, Oban,
        {"0 */6 * * *", DriversSeatCoop.Marketing.Oban.UpdatePopulationMemberships},
        {"30 18 * * *", DriversSeatCoop.ExternalServices.Oban.RefreshExternalServiceIdentifiers,
         args: %{service: "mixpanel"}},
-       {"45 18 * * *", DriversSeatCoop.Accounts.Oban.PurgeDeletedUsers},
-
-       # Every day at 02:01 PM UTC - Import Community Insights Stats from DSC API
-       {"1 14 * * *", DriversSeatCoop.CommunityInsights.Oban.ImportCommunityInsightsPayStatsDSC},
-
-       # Every day at 05:01 PM UTC - Calculate Community Insights using Activity Data
-       {"1 17 * * *", DriversSeatCoop.CommunityInsights.Oban.UpdateCommunityInsightsPayStats},
-       # Every day at 08:01 PM UTC
-       {"1 20 * * *", DriversSeatCoop.CommunityInsights.Oban.UpdateMetroAreaCoverageStats},
-       # Every day at 08:01 PM UTC
-       {"1 20 * * *", DriversSeatCoop.CommunityInsights.Oban.DeleteOutdatedStats}
+       {"45 18 * * *", DriversSeatCoop.Accounts.Oban.PurgeDeletedUsers}
      ]},
     # rescue orphaned jobs after 60 minutes
     Oban.Plugins.Lifeline,
