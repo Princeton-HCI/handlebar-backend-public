@@ -14,8 +14,6 @@ defmodule DriversSeatCoop.Notifications.Oban.CheckForNewNotifications do
 
   alias DriversSeatCoop.Notifications.Oban.ActivitiesUpdatedNotification
   alias DriversSeatCoop.Notifications.Oban.CTAGoalsCheckProgress
-  alias DriversSeatCoop.Notifications.Oban.CTAGoalsLinkAccounts
-  alias DriversSeatCoop.Notifications.Oban.CTAGoalsSetGoals
   alias DriversSeatCoop.Notifications.Oban.GoalPerformanceCelebration
 
   def schedule_job do
@@ -32,8 +30,6 @@ defmodule DriversSeatCoop.Notifications.Oban.CheckForNewNotifications do
 
     ActivitiesUpdatedNotification.schedule_jobs()
     CTAGoalsCheckProgress.schedule_jobs()
-    CTAGoalsLinkAccounts.schedule_jobs()
-    CTAGoalsSetGoals.schedule_jobs()
     GoalPerformanceCelebration.schedule_jobs()
     :ok
   end

@@ -34,8 +34,6 @@ config :dsc, Oban,
         args: %{freq: "month"}},
        {"0 7 * * FRI", DriversSeatCoop.Notifications.Oban.GoalPerformanceUpdate,
         args: %{freq: "week"}},
-       # Refresh marketing population membership
-       {"0 */6 * * *", DriversSeatCoop.Marketing.Oban.UpdatePopulationMemberships},
        {"30 18 * * *", DriversSeatCoop.ExternalServices.Oban.RefreshExternalServiceIdentifiers,
         args: %{service: "mixpanel"}},
        {"45 18 * * *", DriversSeatCoop.Accounts.Oban.PurgeDeletedUsers}
@@ -53,7 +51,6 @@ config :dsc, Oban,
     update_timespans_for_user_workday: 2,
     goals: 2,
     notifications: 2,
-    marketing: 2,
     sync: 1,
     analytics: 2,
     purge: 1

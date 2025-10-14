@@ -23,9 +23,6 @@ defmodule DriversSeatCoop.Accounts do
   alias DriversSeatCoop.Legal
   alias DriversSeatCoop.Legal.AcceptedTerms
   alias DriversSeatCoop.Legal.Terms
-  alias DriversSeatCoop.Marketing.CampaignParticipant
-  alias DriversSeatCoop.Marketing.Oban.UpdatePopulationMemberships
-  alias DriversSeatCoop.Marketing.PopulationMember
   alias DriversSeatCoop.ReferralSource
   alias DriversSeatCoop.Repo
   alias DriversSeatCoop.Research
@@ -445,7 +442,6 @@ defmodule DriversSeatCoop.Accounts do
 
     with {:ok, user} <- Repo.update(changeset) do
       update_user_focus_group_membership(user)
-      UpdatePopulationMemberships.schedule_job(user.id)
       {:ok, user}
     end
   end
@@ -561,8 +557,6 @@ defmodule DriversSeatCoop.Accounts do
         from(e in Expense, where: e.user_id == ^user_id) |> Repo.delete_all()
         from(s in Shift, where: s.user_id == ^user_id) |> Repo.delete_all()
         from(s in ScheduledShift, where: s.user_id == ^user_id) |> Repo.delete_all()
-        from(cp in CampaignParticipant, where: cp.user_id == ^user_id) |> Repo.delete_all()
-        from(pm in PopulationMember, where: pm.user_id == ^user_id) |> Repo.delete_all()
         from(uga in UserGigAccount, where: uga.user_id == ^user_id) |> Repo.delete_all()
         from(fgm in FocusGroupMembership, where: fgm.user_id == ^user_id) |> Repo.delete_all()
 

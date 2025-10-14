@@ -141,17 +141,6 @@ defmodule DriversSeatCoopWeb.Router do
         post "/export", EarningsController, :export
       end
 
-      scope "/marketing" do
-        get "/campaigns", MarketingController, :index
-        post "/campaigns/:campaign", MarketingController, :save
-        post "/campaigns/:campaign/presented", MarketingController, :present
-        post "/campaigns/:campaign/accepted", MarketingController, :accept
-        post "/campaigns/:campaign/postponed", MarketingController, :postpone
-        post "/campaigns/:campaign/dismissed", MarketingController, :dismiss
-        post "/campaigns/:campaign/custom", MarketingController, :custom
-        get "/onboarding_status", MarketingController, :onboarding_status
-      end
-
       scope "/goals" do
         get "/:frequency", GoalsController, :index
         post "/:type/:frequency/:start_date", GoalsController, :save
