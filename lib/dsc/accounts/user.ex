@@ -110,7 +110,6 @@ defmodule DriversSeatCoop.Accounts.User do
     field :remind_shift_end, :boolean, default: false
 
     belongs_to :metro_area, DriversSeatCoop.Regions.MetroArea
-    belongs_to :referral_source, DriversSeatCoop.ReferralSource
     has_many :crepe_events, DriversSeatCoop.Crepe.CrepeEvent
 
     field :is_demo_account, :boolean, default: false
@@ -288,7 +287,8 @@ defmodule DriversSeatCoop.Accounts.User do
         |> put_change(:referral_code, nil)
 
       %Ecto.Changeset{valid?: true, changes: %{referral_code: ref_code}} ->
-        case DriversSeatCoop.ReferralSources.get_referral_source(ref_code) do
+        # Referral sources functionality removed
+        case nil do
           nil ->
             add_error(changeset, :referral_code, "referral code not found")
 

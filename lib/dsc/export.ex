@@ -1,7 +1,6 @@
 defmodule DriversSeatCoop.Export do
   alias DriversSeatCoop.Accounts
   alias DriversSeatCoop.Accounts.User
-  alias DriversSeatCoop.B2
   alias DriversSeatCoop.CSV
   alias DriversSeatCoop.Earnings
   alias DriversSeatCoop.Earnings.Oban.ExportUserEarningsQuery
@@ -11,15 +10,8 @@ defmodule DriversSeatCoop.Export do
 
   def upload_csv_stream(content, filename, compress)
       when is_boolean(compress) do
-    if compress do
-      content
-      |> StreamGzip.gzip()
-      |> Enum.into("")
-      |> B2.upload_file(filename <> ".gz")
-    else
-      content
-      |> B2.upload_file(filename)
-    end
+    # File upload functionality removed - B2 integration deleted
+    {:ok, :upload_disabled}
   end
 
   def round_number(nil), do: nil

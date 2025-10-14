@@ -12,7 +12,6 @@ defmodule DriversSeatCoop.Earnings.Oban.ExportUserEarningsQuery do
 
   require Logger
   alias DriversSeatCoop.Accounts
-  alias DriversSeatCoop.B2
   alias DriversSeatCoop.Export.Oban.DeleteExpiredExportFile
   alias DriversSeatCoop.Export.UserRequest.Earnings
 
@@ -48,7 +47,8 @@ defmodule DriversSeatCoop.Earnings.Oban.ExportUserEarningsQuery do
       @expiration_seconds
     )
 
-    download_url = B2.get_presigned_download_url(file_info.file_name, @expiration_seconds)
+    # B2 integration removed - download URL generation disabled
+    download_url = "https://example.com/file-not-available"
 
     email =
       DriversSeatCoopWeb.DownloadEarningsEmail.download_earnings(

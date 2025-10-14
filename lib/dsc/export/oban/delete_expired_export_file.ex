@@ -9,7 +9,6 @@ defmodule DriversSeatCoop.Export.Oban.DeleteExpiredExportFile do
     max_attempts: 3
 
   require Logger
-  alias DriversSeatCoop.B2
 
   def schedule_job(file_id, file_name, expiration_seconds) do
     scheduled_at_utc =
@@ -38,7 +37,9 @@ defmodule DriversSeatCoop.Export.Oban.DeleteExpiredExportFile do
 
     Logger.info("Deleting expired earnings file: #{file_name}(#{file_id})")
 
-    B2.delete_file(file_name)
+    # B2 integration removed - file deletion disabled
+    Logger.info("File deletion disabled - B2 integration removed")
+    {:ok, :deletion_disabled}
   end
 
   @impl Oban.Worker

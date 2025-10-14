@@ -10,7 +10,7 @@ defmodule DriversSeatCoop.ScheduledShifts.Oban.SendStartShiftReminder do
     max_attempts: 3
 
   require Logger
-  alias DriversSeatCoop.{Accounts, OneSignal, Shifts}
+  alias DriversSeatCoop.{Accounts, Shifts}
 
   def schedule_job(
         user_id,
@@ -44,24 +44,9 @@ defmodule DriversSeatCoop.ScheduledShifts.Oban.SendStartShiftReminder do
 
   # Reminder is sent because user is not on shift and they can receive notification
   defp send_reminder!(user, shift_start_time_local, false) do
-    OneSignal.send_shift_start_reminder(user, shift_start_time_local)
-    |> case do
-      {:ok, :not_configured} ->
-        Logger.info("Start shift reminder skipped (not configured) for user #{user.id}")
-
-      {:ok, :user_cannot_receive_notification} ->
-        # NOTE: this message should be extremely rare in production because this
-        # job should not be scheduled when a user has disabled or cannot receive
-        # notifications. This case would only happen when a user has changed
-        # their notification settings or been deleted between the job being
-        # scheduled and the job being executed.
-        Logger.info("Start shift reminder skipped (cannot receive) for user #{user.id}")
-
-      {:ok, _} ->
-        Logger.info(
-          "Start shift reminder sent for user #{user.id} for shift starting at #{shift_start_time_local}"
-        )
-    end
+    # OneSignal notifications disabled
+    Logger.info("Start shift reminder skipped (notifications disabled) for user #{user.id}")
+    {:ok, :notifications_disabled}
   end
 
   # Reminder not needed because user is currently on-shift

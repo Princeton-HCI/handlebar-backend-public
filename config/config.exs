@@ -44,7 +44,6 @@ config :dsc, Oban,
     {Oban.Plugins.Pruner, max_age: 60 * 60 * 24 * 7}
   ],
   queues: [
-    hubspot_api: 1,
     shift_reminders: 1,
     user_export_request: 1,
     update_timespans_for_user: 1,

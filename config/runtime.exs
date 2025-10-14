@@ -76,11 +76,6 @@ if config_env() == :prod do
   config :dsc,
     terms_v1_id: terms_v1_id
 
-  config :dsc, DriversSeatCoop.B2,
-    key_id: System.get_env("B2_KEY_ID"),
-    application_key: System.get_env("B2_APPLICATION_KEY"),
-    bucket: System.get_env("B2_BUCKET")
-
   config :dsc, DriversSeatCoopWeb.Mailer,
     adapter: Swoosh.Adapters.Sendgrid,
     api_key: System.get_env("SENDGRID_API_KEY"),

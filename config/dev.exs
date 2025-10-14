@@ -50,10 +50,6 @@ config :dsc, DriversSeatCoopWeb.Mailer,
   from_name: "DriversSeatCoop",
   from_address: "support+dev@example.com"
 
-config :dsc,
-  one_signal_api_key: System.get_env("ONE_SIGNAL_API_KEY"),
-  one_signal_app_id: System.get_env("ONE_SIGNAL_APP_ID")
-
 config :dsc, DriversSeatCoop.Mixpanel,
   service_account_id: System.get_env("MIX_PANEL_ACCT_ID"),
   service_account_secret: System.get_env("MIX_PANEL_ACCT_SECRET"),

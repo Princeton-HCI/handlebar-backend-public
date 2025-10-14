@@ -14,7 +14,6 @@ defmodule DriversSeatCoop.Notifications.Oban.GoalPerformanceUpdate do
   alias DriversSeatCoop.Accounts
   alias DriversSeatCoop.Accounts.User
   alias DriversSeatCoop.Goals
-  alias DriversSeatCoop.OneSignal
   alias DriversSeatCoop.Repo
   alias DriversSeatCoop.Util.DateTimeUtil
 
@@ -92,14 +91,8 @@ defmodule DriversSeatCoop.Notifications.Oban.GoalPerformanceUpdate do
         {:ok, :greater_than_or_equal_to_100_percent}
 
       true ->
-        OneSignal.send_notification_goal_performance_update(
-          user,
-          goal_frequency,
-          window_date,
-          performance_percent,
-          goal_amount_cents,
-          performance_amount_cents
-        )
+        # OneSignal notifications disabled
+        {:ok, :notifications_disabled}
     end
   end
 

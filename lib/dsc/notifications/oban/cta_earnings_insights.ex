@@ -18,7 +18,6 @@ defmodule DriversSeatCoop.Notifications.Oban.CTAEarningsInsights do
 
   alias DriversSeatCoop.Accounts
   alias DriversSeatCoop.Accounts.User
-  alias DriversSeatCoop.OneSignal
   alias DriversSeatCoop.Repo
 
   @cutoff_date ~N[2023-04-06 07:00:00.000000]
@@ -79,7 +78,8 @@ defmodule DriversSeatCoop.Notifications.Oban.CTAEarningsInsights do
       )
       |> Repo.one()
 
-    OneSignal.send_cta_welcome_to_insights(user, count_users_with_earnings)
+    # OneSignal notifications disabled
+    {:ok, :notifications_disabled}
   end
 
   @impl Oban.Worker

@@ -39,11 +39,6 @@ config :argon2_elixir,
   t_cost: 1,
   m_cost: 8
 
-config :dsc, DriversSeatCoop.B2,
-  key_id: "valid_application_key_id",
-  application_key: "valid_application_key",
-  bucket: "ex-b2-client-test-bucket"
-
 config :dsc, DriversSeatCoopWeb.Mailer,
   adapter: Swoosh.Adapters.Test,
   from_name: "DriversSeatCoop-Test",

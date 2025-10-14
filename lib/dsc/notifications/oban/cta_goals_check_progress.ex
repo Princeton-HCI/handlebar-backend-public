@@ -17,7 +17,6 @@ defmodule DriversSeatCoop.Notifications.Oban.CTAGoalsCheckProgress do
 
   alias DriversSeatCoop.Accounts
   alias DriversSeatCoop.Accounts.User
-  alias DriversSeatCoop.OneSignal
   alias DriversSeatCoop.Repo
 
   def schedule_jobs do
@@ -68,7 +67,8 @@ defmodule DriversSeatCoop.Notifications.Oban.CTAGoalsCheckProgress do
         {:ok, :not_sent_notifications_not_enabled_for_user}
 
       true ->
-        OneSignal.send_notification_goals_check_progress(user)
+        # OneSignal notifications disabled
+        {:ok, :notifications_disabled}
     end
   end
 

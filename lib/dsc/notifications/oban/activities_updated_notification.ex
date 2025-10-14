@@ -10,7 +10,6 @@ defmodule DriversSeatCoop.Notifications.Oban.ActivitiesUpdatedNotification do
   alias DriversSeatCoop.Accounts
   alias DriversSeatCoop.Accounts.User
   alias DriversSeatCoop.Activities
-  alias DriversSeatCoop.OneSignal
   alias DriversSeatCoop.Repo
 
   @max_count_notif 5
@@ -156,11 +155,10 @@ defmodule DriversSeatCoop.Notifications.Oban.ActivitiesUpdatedNotification do
   end
 
   defp send_notification_for_activities(user, activities) do
-    with {:ok, _} <- OneSignal.send_notification_new_activities(user, activities) do
-      activity_ids = Enum.map(activities, fn a -> a.id end)
-      Activities.update_notification_sent(activity_ids)
-      {:ok, :sent, activity_ids}
-    end
+    # OneSignal notifications disabled
+    activity_ids = Enum.map(activities, fn a -> a.id end)
+    Activities.update_notification_sent(activity_ids)
+    {:ok, :notifications_disabled, activity_ids}
   end
 
   @impl Oban.Worker

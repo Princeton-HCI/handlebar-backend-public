@@ -10,7 +10,7 @@ defmodule DriversSeatCoop.ScheduledShifts.Oban.SendEndShiftReminder do
     max_attempts: 3
 
   require Logger
-  alias DriversSeatCoop.{Accounts, OneSignal, Shifts}
+  alias DriversSeatCoop.{Accounts, Shifts}
 
   def schedule_job(
         user_id,
@@ -51,24 +51,9 @@ defmodule DriversSeatCoop.ScheduledShifts.Oban.SendEndShiftReminder do
 
   # User can receive notification and is currently on-shift
   defp send_reminder!(user, shift_end_time_local, true) do
-    OneSignal.send_shift_end_reminder(user, shift_end_time_local)
-    |> case do
-      {:ok, :not_configured} ->
-        Logger.info("End shift reminder skipped (not configured) for user #{user.id}")
-
-      {:ok, :user_cannot_receive_notification} ->
-        # NOTE: this message should be extremely rare in production because this
-        # job should not be scheduled when a user has disabled or cannot receive
-        # notifications. This case would only happen when a user has changed
-        # their notification settings or been deleted between the job being
-        # scheduled and the job being executed.
-        Logger.info("End shift reminder skipped (cannot receive) for user #{user.id}")
-
-      {:ok, _} ->
-        Logger.info(
-          "End shift reminder sent for user #{user.id} for shift ending at #{shift_end_time_local}"
-        )
-    end
+    # OneSignal notifications disabled
+    Logger.info("End shift reminder skipped (notifications disabled) for user #{user.id}")
+    {:ok, :notifications_disabled}
   end
 
   @impl Oban.Worker
