@@ -1,3 +1,20 @@
+# UPDATE FROM DSC API + MIGRATION NOTES
+
+This is the result of a migration kicked off by Andrew in October '25 to
+create a Handlebar API that excluded all unused functionality from the
+original DSC.
+
+## Current state
+
+## TODOs
+- [ ] Continue removing unused code
+- [ ] Update routing and endpoints in the handlebar app to use /handlebar instead of /crepe
+- [ ] Include database migrations in the build pipeline (see `run_google_cloud_migrations.sh` for an example)
+- [ ] Create a test database and Cloud Run instance
+- [ ] I highly recommend **using a custom domain or subdomain** so that future updates can be done without managing different URLs on different app versions. This will also facilitate configuring a firewall, load balancers, etc. if needed later on.
+- [ ] Cut over the current Handlebar deploy to point at this new URL
+- [ ] Move `SECRET_KEY_BASE` and database secrets to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
+
 # Drivers Seat Coop Web and API
 
 Related Projects:
