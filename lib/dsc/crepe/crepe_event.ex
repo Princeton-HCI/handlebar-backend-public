@@ -4,16 +4,18 @@ defmodule DriversSeatCoop.Crepe.CrepeEvent do
 
   alias DriversSeatCoop.Accounts.User
   alias DriversSeatCoop.Crepe.DataField
+  alias DriversSeatCoop.Research.ResearchGroupMembership
 
-  @required_fields ~w(user_id data_field_id collected_at content)a
+  @required_fields ~w(user_id data_field_id membership_id collected_at content)a
   @optional_fields ~w()a
 
   schema "crepe_event" do
-    field :collected_at, :utc_datetime
-    field :content, :string
-
     belongs_to :user, User
     belongs_to :data_field, DataField
+    belongs_to :membership, ResearchGroupMembership
+
+    field :collected_at, :utc_datetime
+    field :content, :string
 
     timestamps()
   end
@@ -24,5 +26,6 @@ defmodule DriversSeatCoop.Crepe.CrepeEvent do
     |> validate_required(@required_fields)
     |> assoc_constraint(:user)
     |> assoc_constraint(:data_field)
+    |> assoc_constraint(:membership)
   end
 end

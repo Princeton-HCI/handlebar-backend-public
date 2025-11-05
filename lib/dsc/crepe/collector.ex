@@ -15,7 +15,7 @@ defmodule DriversSeatCoop.Crepe.Collector do
     field :app_package, :string
     field :description, :string
 
-    has_many :data_fields, DataField
+    has_many :data_fields, DataField, on_replace: :delete
 
     timestamps()
   end
@@ -25,5 +25,6 @@ defmodule DriversSeatCoop.Crepe.Collector do
     collector
     |> cast(attrs, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
+    |> cast_assoc(:data_fields, required: true)
   end
 end

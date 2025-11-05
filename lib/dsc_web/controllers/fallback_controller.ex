@@ -26,6 +26,13 @@ defmodule DriversSeatCoopWeb.FallbackController do
     |> render("error_multi.json", changeset: changeset, index: index)
   end
 
+  def call(conn, {:error, :conflict}) do
+    conn
+    |> put_status(:conflict)
+    |> put_view(DriversSeatCoopWeb.ErrorView)
+    |> render(:"409")
+  end
+
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)

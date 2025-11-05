@@ -23,8 +23,7 @@ defmodule DriversSeatCoop.Accounts do
   alias DriversSeatCoop.Legal.AcceptedTerms
   alias DriversSeatCoop.Legal.Terms
   alias DriversSeatCoop.Repo
-  alias DriversSeatCoop.Research
-  alias DriversSeatCoop.Research.FocusGroupMembership
+  alias DriversSeatCoop.Research.ResearchGroupMembership
   alias DriversSeatCoop.ScheduledShifts.ScheduledShift
   alias DriversSeatCoop.Shifts.Shift
 
@@ -68,17 +67,17 @@ defmodule DriversSeatCoop.Accounts do
       else: where(qry, [u], u.metro_area_id not in ^metro_area_id_or_ids)
   end
 
-  def filter_users_in_focus_group_query(qry, focus_group_id_or_ids, include \\ true) do
-    focus_group_id_or_ids = List.wrap(focus_group_id_or_ids)
+  def filter_users_in_research_group_query(qry, research_group_id_or_ids, include \\ true) do
+    research_group_id_or_ids = List.wrap(research_group_id_or_ids)
 
     if include do
       where(
         qry,
         [u],
         fragment(
-          "? IN (SELECT user_id FROM focus_group_memberships where unenroll_date IS NULL AND focus_group_id = ANY(?))",
+          "? IN (SELECT user_id FROM research_group_memberships where unenrolled_at IS NULL AND research_group_id = ANY(?))",
           u.id,
-          ^focus_group_id_or_ids
+          ^research_group_id_or_ids
         )
       )
     else
@@ -86,21 +85,21 @@ defmodule DriversSeatCoop.Accounts do
         qry,
         [u],
         fragment(
-          "? NOT IN (SELECT user_id FROM focus_group_memberships where unenroll_date IS NULL AND focus_group_id = ANY(?))",
+          "? NOT IN (SELECT user_id FROM research_group_memberships where unenrolled_at IS NULL AND research_group_id = ANY(?))",
           u.id,
-          ^focus_group_id_or_ids
+          ^research_group_id_or_ids
         )
       )
     end
   end
 
-  def filter_users_in_any_focus_group_query(qry, include \\ true) do
+  def filter_users_in_any_research_group_query(qry, include \\ true) do
     if include do
       where(
         qry,
         [u],
         fragment(
-          "? IN (SELECT user_id FROM focus_group_memberships where unenroll_date IS NULL)",
+          "? IN (SELECT user_id FROM research_group_memberships where unenrolled_at IS NULL)",
           u.id
         )
       )
@@ -109,7 +108,7 @@ defmodule DriversSeatCoop.Accounts do
         qry,
         [u],
         fragment(
-          "? NOT IN (SELECT user_id FROM focus_group_memberships where unenroll_date IS NULL)",
+          "? NOT IN (SELECT user_id FROM research_group_memberships where unenrolled_at IS NULL)",
           u.id
         )
       )
@@ -436,46 +435,9 @@ defmodule DriversSeatCoop.Accounts do
   Updates a user.
   """
   def update_user(%User{} = user, attrs) do
-    changeset = User.changeset(user, attrs)
-
-    with {:ok, user} <- Repo.update(changeset) do
-      update_user_focus_group_membership(user)
-      {:ok, user}
-    end
-  end
-
-  # credo:disable-for-next-line
-  def update_user_focus_group_membership(user) do
-    research_group = Research.get_research_group_by_case_insensitive_code(user.focus_group)
-    membership = Research.get_current_membership(user.id)
-
-    multi = Ecto.Multi.new()
-
-    multi =
-      cond do
-        is_nil(research_group) and is_nil(membership) ->
-          multi
-
-        is_nil(research_group) or not is_nil(user.unenrolled_research_at) ->
-          Research.unenroll_user(multi, user.id)
-
-        is_nil(research_group) and not is_nil(membership) ->
-          Research.unenroll_user(multi, user.id)
-
-        not is_nil(research_group) and is_nil(membership) ->
-          Research.enroll_user(multi, user.id, research_group.id)
-
-        # active enrollment, but codes dont match: unenroll/enroll
-        membership.focus_group_id != research_group.id ->
-          multi
-          |> Research.unenroll_user(user.id)
-          |> Research.enroll_user(user.id, research_group.id)
-
-        true ->
-          multi
-      end
-
-    Repo.transaction(multi)
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
   end
 
   @doc """
@@ -545,7 +507,7 @@ defmodule DriversSeatCoop.Accounts do
         from(s in Shift, where: s.user_id == ^user_id) |> Repo.delete_all()
         from(s in ScheduledShift, where: s.user_id == ^user_id) |> Repo.delete_all()
         from(uga in UserGigAccount, where: uga.user_id == ^user_id) |> Repo.delete_all()
-        from(fgm in FocusGroupMembership, where: fgm.user_id == ^user_id) |> Repo.delete_all()
+        from(rgm in ResearchGroupMembership, where: rgm.user_id == ^user_id) |> Repo.delete_all()
 
         from(d in Device, where: d.user_id == ^user_id) |> Repo.delete_all(timeout: :infinity)
 

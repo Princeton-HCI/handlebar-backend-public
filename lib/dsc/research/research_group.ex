@@ -2,7 +2,7 @@ defmodule DriversSeatCoop.Research.ResearchGroup do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @required_fields ~w(code description name)a
+  @required_fields ~w(description name code)a
   @optional_fields ~w()a
 
   schema "research_groups" do

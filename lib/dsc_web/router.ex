@@ -51,6 +51,10 @@ defmodule DriversSeatCoopWeb.Router do
     plug DriversSeatCoopWeb.AdminOnlyPlug
   end
 
+  pipeline :researcher_only do
+    plug DriversSeatCoopWeb.ResearcherPlug
+  end
+
   scope "/", DriversSeatCoopWeb.Web, as: :web do
     pipe_through :browser
 
@@ -70,7 +74,6 @@ defmodule DriversSeatCoopWeb.Router do
       delete "/logout", SessionController, :logout
       resources "/terms", TermsController
       resources "/accepted_terms", AcceptedTermsController
-      resources "/research_groups", ResearchGroupController
       resources "/users", UserController
       post "/users/burninate/:id", UserController, :burninate
 
@@ -91,7 +94,6 @@ defmodule DriversSeatCoopWeb.Router do
     get "/users/lookup/:email", UserController, :lookup
     resources "/sessions", SessionController, only: [:create]
     resources "/reset_password", ResetPasswordController, only: [:create]
-    get "/research_groups/lookup/:code", ResearchGroupController, :lookup
     get "/terms/public", TermsController, :public
     post "/help/request/public", HelpController, :create
 
@@ -113,6 +115,41 @@ defmodule DriversSeatCoopWeb.Router do
 
     scope "/" do
       pipe_through :authenticated_and_terms_required
+
+      scope "/research" do
+        # List and create research groups
+        resources "/groups", ResearchGroupController, only: [:index, :show, :create]
+
+        # Lookup a group via code
+        get "/groups/lookup/:code", ResearchGroupController, :lookup
+
+        # List collectors for a research group
+        get "/groups/:group_id/collectors", ResearchGroupCollectorController, :index
+
+        # List all collectors for groups the user is an active participant for
+        get "/me/collectors", ResearchGroupCollectorController, :index_for_user
+
+        # Membership self-service
+        post "/memberships/join", ResearchGroupMembershipController, :join
+        patch "/memberships/:membership_id", ResearchGroupMembershipController, :update
+        delete "/memberships/:membership_id", ResearchGroupMembershipController, :leave
+
+        scope "/" do
+          pipe_through :researcher_only
+
+          # Update/delete groups
+          resources "/groups", ResearchGroupController, only: [:update, :delete]
+
+          # Manage research group membership
+          get "/groups/:group_id/members", ResearchGroupMembershipController, :index
+          post "/groups/:group_id/members", ResearchGroupMembershipController, :create_researcher
+          delete "/groups/:group_id/members/:membership_id", ResearchGroupMembershipController, :kick
+
+          # Create/delete collectors
+          post "/groups/:group_id/collectors", ResearchGroupCollectorController, :create
+          delete "/groups/:group_id/collectors/:collector_id", ResearchGroupCollectorController, :delete
+        end
+      end
 
       resources "/points", PointController, only: [:create]
 

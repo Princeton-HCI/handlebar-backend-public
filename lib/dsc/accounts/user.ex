@@ -35,6 +35,7 @@ defmodule DriversSeatCoop.Accounts.User do
     password
     phone_number
     postal_code
+    referral_source_id
     referral_code
     remind_shift_end
     remind_shift_start
@@ -61,6 +62,7 @@ defmodule DriversSeatCoop.Accounts.User do
     field :vehicle_model, :string
     field :vehicle_type, :string
     field :vehicle_year, :integer
+    field :referral_source_id, :integer
 
     field :contact_permission, :boolean
     field :device_platform, :string
