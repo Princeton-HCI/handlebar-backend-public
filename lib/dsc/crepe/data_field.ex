@@ -3,11 +3,7 @@ defmodule DriversSeatCoop.Crepe.DataField do
   import Ecto.Changeset
   alias DriversSeatCoop.Crepe.Collector
 
-  @required_fields ~w(
-    graph_query
-    name
-    collector_id
-  )a
+  @required_fields ~w(graph_query name)a
 
   @optional_fields ~w()a
 

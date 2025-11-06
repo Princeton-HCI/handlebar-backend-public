@@ -24,7 +24,6 @@
           </div>
           <nav class="torch-nav">
             <%= link "Terms", to: Routes.admin_terms_path(@conn, :index) %>
-            <%= link "Research Groups", to: Routes.admin_research_group_path(@conn, :index) %>
             <%= link "Users", to: Routes.admin_user_path(@conn, :index) %>
             <%= link "Oban", to: Routes.admin_oban_job_path(@conn, :index) %>
           </nav>

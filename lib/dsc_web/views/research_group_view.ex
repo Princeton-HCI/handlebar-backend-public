@@ -14,7 +14,8 @@ defmodule DriversSeatCoopWeb.ResearchGroupView do
     %{
       id: research_group.id,
       description: research_group.description,
-      name: research_group.name
+      name: research_group.name,
+      code: research_group.code
     }
   end
 end
