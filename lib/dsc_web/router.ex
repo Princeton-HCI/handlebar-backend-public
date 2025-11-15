@@ -97,10 +97,6 @@ defmodule DriversSeatCoopWeb.Router do
     get "/terms/public", TermsController, :public
     post "/help/request/public", HelpController, :create
 
-    scope "/crepe" do
-      resources "/collector", CrepeCollectorController, only: [:index]
-    end
-
     scope "/" do
       pipe_through :authenticated
 
@@ -129,10 +125,16 @@ defmodule DriversSeatCoopWeb.Router do
         # List all collectors for groups the user is an active participant for
         get "/me/collectors", ResearchGroupCollectorController, :index_for_user
 
+        # List all crepe events for the current user
+        get "/me/crepe-events", ResearchGroupCrepeEventController, :index_participant
+
         # Membership self-service
         post "/memberships/join", ResearchGroupMembershipController, :join
         patch "/memberships/:membership_id", ResearchGroupMembershipController, :update
         delete "/memberships/:membership_id", ResearchGroupMembershipController, :leave
+
+        # Creates a crepe event from data sent by a collector
+        post "/crepe-event", ResearchGroupCrepeEventController, :create
 
         scope "/" do
           pipe_through :researcher_only
@@ -148,6 +150,10 @@ defmodule DriversSeatCoopWeb.Router do
           # Create/delete collectors
           post "/groups/:group_id/collectors", ResearchGroupCollectorController, :create
           delete "/groups/:group_id/collectors/:collector_id", ResearchGroupCollectorController, :delete
+
+          # List crepe events from participants
+          get "/groups/:group_id/crepe-events", ResearchGroupCrepeEventController, :index_researcher_all_participants
+          get "/groups/:group_id/members/:membership_id/crepe-events", ResearchGroupCrepeEventController, :index_researcher_single_participant
         end
       end
 
@@ -181,10 +187,6 @@ defmodule DriversSeatCoopWeb.Router do
         scope "/performance" do
           get "/:frequency/:window_date", GoalsController, :performance
         end
-      end
-
-      scope "/crepe" do
-        resources "/event", CrepeEventController, only: [:create]
       end
     end
 

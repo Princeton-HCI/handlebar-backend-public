@@ -134,18 +134,37 @@ defmodule DriversSeatCoop.Research do
 
   @doc """
   Deletes a research group.
-
-  ## Examples
-
-      iex> delete_research_group(research_group)
-      {:ok, %ResearchGroup{}}
-
-      iex> delete_research_group(research_group)
-      {:error, %Ecto.Changeset{}}
+  This assumes collectors are per-group. In the future, if we make them
+  publishable/shared this function will have to change (1 of 2)
 
   """
   def delete_research_group(%ResearchGroup{} = research_group) do
-    Repo.delete(research_group)
+  Repo.transaction(fn ->
+      group_id = research_group.id
+      # Gets collectors associated with this group
+      rgc_records =
+        from(rgc in ResearchGroupCollector,
+          where: rgc.research_group_id == ^group_id,
+          select: rgc.collector_id
+        )
+        |> Repo.all()
+
+      # Delete the associated Collector records
+      if rgc_records != [] do
+        collector_delete_query = from(c in Collector,
+          where: c.id in ^rgc_records)
+
+        Repo.delete_all(collector_delete_query)
+      end
+
+      # Delete the ResearchGroup record
+      case Repo.delete(research_group) do
+        {:ok, deleted_group} ->
+          deleted_group
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
   end
 
   # -------------------------
@@ -322,7 +341,8 @@ defmodule DriversSeatCoop.Research do
   end
 
   @doc """
-  Lists all distinct collectors for groups where the user is an active participant.
+  Lists all distinct collectors and corresponding membership
+  for groups where the user is an active participant.
   """
   def list_participant_collectors(user_id) do
     from(c in DriversSeatCoop.Crepe.Collector,
@@ -336,6 +356,7 @@ defmodule DriversSeatCoop.Research do
         m.role == "participant",
       left_join: df in assoc(c, :data_fields),
       preload: [data_fields: df],
+      select: {c, m.id},
       distinct: true,
       order_by: [asc: c.app_name]
     )
@@ -362,16 +383,105 @@ defmodule DriversSeatCoop.Research do
     |> Repo.transaction()
   end
 
-
   @doc """
   Deletes a research group collector and the underlying collector record.
 
   This assumes the collector is not shared across multiple groups. If
-  collectors become shared, this function will need to change.
+  collectors become shared, this function will need to change (2 of 2)
   """
   def delete_research_group_collector(%DriversSeatCoop.Research.ResearchGroupCollector{} = rgc) do
     collector = Repo.get!(DriversSeatCoop.Crepe.Collector, rgc.collector_id)
     Repo.delete(collector)
+    # Cascade also deletes the rgc
+  end
+
+  # -------------------------
+  # CREPE EVENTS
+  # -------------------------
+  def list_crepe_events(filters \\ []) do
+    from(e in CrepeEvent)
+    |> maybe_join_membership(filters)
+    |> apply_crepe_event_filters(filters)
+    |> with_crepe_event_preloads()
+    |> Repo.all()
+  end
+
+  defp maybe_join_membership(query, filters) do
+    # Check if filters require a membership role
+    needs_join =
+      Keyword.has_key?(filters, :group_id) or
+      Keyword.has_key?(filters, :role) or
+      Keyword.has_key?(filters, :active_membership)
+
+    if needs_join do
+      join(query, :left, [e], m in assoc(e, :membership), [as :m])
+    else
+      query
+    end
+  end
+
+  defp apply_crepe_event_filters(query, filters) do
+    # add filter by user if applicable
+    query =
+      if user_id = filters[:user_id] do
+        where(query, [e], e.user_id == ^user_id)
+      else
+        query
+      end
+
+    # add filter by membership if applicable
+    query =
+      if membership_id = filters[:membership_id] do
+        where(query, [e], e.membership_id == ^membership_id)
+      else
+        query
+      end
+
+    # add filter by groupid if applicable
+    query =
+      if group_id = filters[:group_id] do
+        where(query, [e, m], m.research_group_id == ^group_id)
+      else
+        query
+      end
+
+    # add filter by role if applicable
+    query =
+      if role = filters[:role] do
+        where(query, [e, m], m.role == ^role)
+      else
+        query
+      end
+
+    # add filter by active membership if applicable
+    query =
+      if filters[:active_membership] == true do
+        where(query, [e, m], is_nil(m.unenrolled_at))
+      else
+        query
+      end
+
+    query
+  end
+
+  defp with_crepe_event_preloads(query) do
+    # Preload the user, data fields and membership
+    query
+      |> order_by(desc: :collected_at)
+      |> distinct(:id)
+      |> preload([:user, :data_field, :membership])
+  end
+
+  def create_crepe_event(attrs, user_id) do
+    # TODO: Define notification behavior here based on user and/or data field
+    notification = nil
+
+    with {:ok, crepe_event} <-
+           %CrepeEvent{user_id: user_id}
+           |> CrepeEvent.changeset(attrs)
+           |> Repo.insert() do
+      {:ok, %{crepe_event: crepe_event, notification: notification}}
+    end
   end
 
   def query_membership, do: from(m in ResearchGroupMembership)

@@ -1,9 +1,19 @@
 defmodule DriversSeatCoopWeb.ResearchGroupCollectorView do
   use DriversSeatCoopWeb, :view
-  alias DriversSeatCoopWeb.ResearchGroupCollectorView
 
-  def render("index.json", %{collectors: collectors}) do
-    %{data: render_many(collectors, ResearchGroupCollectorView, "collector.json", as: :collector)}
+def render("index.json", %{collectors: collectors_with_ids}) do
+    %{
+      data:
+        Enum.map(collectors_with_ids, fn {collector, membership_id} ->
+          collector_json =
+            render_one(collector, __MODULE__, "collector.json", as: :collector)
+          [collector_json, membership_id]
+        end)
+    }
+  end
+
+  def render("collectors_index.json", %{collectors: collectors}) do
+    %{data: render_many(collectors, __MODULE__, "collector.json", as: :collector)}
   end
 
   def render("collector.json", %{collector: c}) do
