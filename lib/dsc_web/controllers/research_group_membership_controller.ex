@@ -113,7 +113,8 @@ defmodule DriversSeatCoopWeb.ResearchGroupMembershipController do
       %ResearchGroupMembership{
         user_id: uid,
         research_group_id: gid,
-        role: "researcher"
+        role: "researcher",
+        retention_pref_on_unenroll: policy
       } = _m ->
         if uid != caller_id do
           {:error, :unauthorized}
@@ -122,7 +123,7 @@ defmodule DriversSeatCoopWeb.ResearchGroupMembershipController do
             # Last active researcher, throw conflict
             {:error, :conflict}
           else
-            case Research.unenroll_user(uid, gid) do
+            case Research.unenroll_user(uid, gid, String.to_atom(policy)) do
               {:ok, _} -> send_resp(conn, 204, "")
               {:error, changeset} -> {:error, changeset}
             end
@@ -130,11 +131,11 @@ defmodule DriversSeatCoopWeb.ResearchGroupMembershipController do
         end
 
       # Participant trying to leave
-      %ResearchGroupMembership{user_id: uid, research_group_id: gid} ->
+      %ResearchGroupMembership{user_id: uid, research_group_id: gid, retention_pref_on_unenroll: policy} ->
         if uid != caller_id do
           {:error, :unauthorized}
         else
-          case Research.unenroll_user(uid, gid) do
+          case Research.unenroll_user(uid, gid, String.to_atom(policy)) do
             {:ok, _} -> send_resp(conn, 204, "")
             {:error, changeset} -> {:error, changeset}
           end
@@ -152,12 +153,12 @@ defmodule DriversSeatCoopWeb.ResearchGroupMembershipController do
       nil ->
         {:error, :not_found}
 
-      %ResearchGroupMembership{research_group_id: ^group_id, user_id: uid} ->
+      %ResearchGroupMembership{research_group_id: ^group_id, user_id: uid, retention_pref_on_unenroll: policy} ->
         if uid == caller_id do
           # User attempted to kick themselves, throw conflict
           {:error, :conflict}
         else
-          case Research.unenroll_user(uid, group_id) do
+          case Research.unenroll_user(uid, group_id, String.to_atom(policy)) do
             {:ok, _} -> send_resp(conn, 204, "")
             {:error, changeset} -> {:error, changeset}
           end

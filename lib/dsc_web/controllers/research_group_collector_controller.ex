@@ -8,7 +8,7 @@ defmodule DriversSeatCoopWeb.ResearchGroupCollectorController do
   def index(conn, %{"group_id" => gid}) do
     group_id = String.to_integer(gid)
     collectors = Research.list_group_collectors(group_id)
-    render(conn, "index.json", collectors: collectors)
+    render(conn, "collectors_index.json", collectors: collectors)
   end
 
   # GET /api/research/me/collectors
