@@ -62,6 +62,7 @@ defmodule DriversSeatCoop.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_swoosh, "~> 1.0"},
       {:plug_cowboy, "~> 2.5"},
+      {:paginator, "~> 1.2.0"},
       {:postgrex, ">= 0.0.0"},
       {:sentry, "~> 8.0"},
       {:stream_gzip, "~> 0.4.2"},

@@ -10,7 +10,7 @@ defmodule DriversSeatCoopWeb.ResearchGroupController do
   def index(conn, _params) do
     user_id = conn.assigns.user.id
     groups = Research.list_user_research_groups(user_id)
-    render(conn, DriversSeatCoopWeb.ResearchGroupView, "index.json", research_groups: groups)
+    render(conn, "index.json", research_groups: groups)
   end
 
   # GET /api/research/groups/:id
@@ -20,7 +20,7 @@ defmodule DriversSeatCoopWeb.ResearchGroupController do
         {:error, :not_found}
 
       %ResearchGroup{} = rg ->
-        render(conn, DriversSeatCoopWeb.ResearchGroupView, "show.json", research_group: rg)
+        render(conn, "show.json", research_group: rg)
     end
   end
 
@@ -41,10 +41,11 @@ defmodule DriversSeatCoopWeb.ResearchGroupController do
 
     case Research.create_research_group(attrs) do
       {:ok, %ResearchGroup{} = rg} ->
+        # return newly created group back
         conn
         |> put_status(:created)
         |> put_resp_header("location", Routes.research_group_path(conn, :show, rg))
-        |> render(DriversSeatCoopWeb.ResearchGroupView, "show.json", research_group: rg)
+        |> render("create.json", research_group: %{group: rg, role: "researcher"})
 
       {:error, changeset} -> {:error, changeset}
     end
@@ -59,7 +60,7 @@ defmodule DriversSeatCoopWeb.ResearchGroupController do
       %ResearchGroup{} = rg ->
         case Research.update_research_group(rg, attrs) do
           {:ok, %ResearchGroup{} = rg} ->
-            render(conn, DriversSeatCoopWeb.ResearchGroupView, "show.json", research_group: rg)
+            render(conn, "show.json", research_group: rg)
 
           {:error, changeset} ->
             {:error, changeset}

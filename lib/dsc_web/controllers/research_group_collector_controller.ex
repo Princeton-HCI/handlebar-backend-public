@@ -5,14 +5,14 @@ defmodule DriversSeatCoopWeb.ResearchGroupCollectorController do
   action_fallback DriversSeatCoopWeb.FallbackController
 
   # GET /api/research/groups/:group_id/collectors
-  def index(conn, %{"group_id" => gid}) do
+  def index_group(conn, %{"group_id" => gid}) do
     group_id = String.to_integer(gid)
     collectors = Research.list_group_collectors(group_id)
     render(conn, "collectors_index.json", collectors: collectors)
   end
 
   # GET /api/research/me/collectors
-  def index_for_user(conn, _params) do
+  def index_participant(conn, _params) do
     user_id = conn.assigns.user.id
     collectors = DriversSeatCoop.Research.list_participant_collectors(user_id)
     render(conn, "index.json", collectors: collectors)
@@ -24,14 +24,18 @@ defmodule DriversSeatCoopWeb.ResearchGroupCollectorController do
     group_id = String.to_integer(gid)
 
     case Research.create_collector_and_attach(group_id, collector_params) do
-      {:ok, _result} ->
-        send_resp(conn, 201, "")
+      {:ok, collector} ->
+        # return newly created collector
+        conn
+        |> put_status(:created)
+        |> render(DriversSeatCoopWeb.ResearchGroupCollectorView, "show.json",
+          collector: collector
+        )
 
       {:error, _step, changeset, _changes_so_far} ->
         {:error, changeset}
     end
   end
-
 
   # DELETE /api/research/groups/:group_id/collectors/:collector_id
   def delete(conn, %{"group_id" => gid, "collector_id" => cid}) do

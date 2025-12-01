@@ -120,15 +120,16 @@ defmodule DriversSeatCoopWeb.Router do
         get "/groups/lookup/:code", ResearchGroupController, :lookup
 
         # List collectors for a research group
-        get "/groups/:group_id/collectors", ResearchGroupCollectorController, :index
+        get "/groups/:group_id/collectors", ResearchGroupCollectorController, :index_group
 
         # List all collectors for groups the user is an active participant for
-        get "/me/collectors", ResearchGroupCollectorController, :index_for_user
+        get "/me/collectors", ResearchGroupCollectorController, :index_participant
 
         # List all crepe events for the current user
         get "/me/crepe-events", ResearchGroupCrepeEventController, :index_participant
 
         # Membership self-service
+        get "/groups/:group_id/membership", ResearchGroupMembershipController, :show_mine
         post "/memberships/join", ResearchGroupMembershipController, :join
         patch "/memberships/:membership_id", ResearchGroupMembershipController, :update
         delete "/memberships/:membership_id", ResearchGroupMembershipController, :leave
