@@ -24,22 +24,33 @@ defmodule DriversSeatCoopWeb.ResearchGroupCrepeEventController do
         base_filters
       end
 
-    events = Research.list_crepe_events(filters)
-    render(conn, "index.json", crepe_events: events)
+    # Get pagination options
+    pagination_opts = pagination_opts_from_params(params)
+
+    # Get page
+    page = Research.list_crepe_events(filters, pagination_opts)
+
+    render(conn, "index.json", crepe_events: page.entries, meta: page.metadata)
   end
 
   # GET /api/research/groups/:group_id/crepe-events
-  def index_researcher_all_participants(conn, %{"group_id" => gid}) do
+  def index_researcher_all_participants(conn, %{"group_id" => gid} = params) do
     group_id = String.to_integer(gid)
 
     # Fetch events for this group with the 'participant' role
     filters = [group_id: group_id, role: "participant"]
-    events = Research.list_crepe_events(filters)
-    render(conn, "index.json", crepe_events: events)
+
+    # Get pagination options
+    pagination_opts = pagination_opts_from_params(params)
+
+    # Get page
+    page = Research.list_crepe_events(filters, pagination_opts)
+
+    render(conn, "index.json", crepe_events: page.entries, meta: page.metadata)
   end
 
   # GET /api/research/groups/:group_id/members/:membership_id/crepe-events
-  def index_researcher_single_participant(conn, %{"group_id" => gid, "membership_id" => mid}) do
+  def index_researcher_single_participant(conn, %{"group_id" => gid, "membership_id" => mid} = params) do
     group_id = String.to_integer(gid)
     membership_id = String.to_integer(mid)
 
@@ -47,9 +58,14 @@ defmodule DriversSeatCoopWeb.ResearchGroupCrepeEventController do
       nil ->
         {:error, :not_found}
 
-      %ResearchGroupMembership{research_group_id: ^group_id} = _m ->
-        events = Research.list_crepe_events([membership_id: membership_id])
-        render(conn, "index.json", crepe_events: events)
+      %ResearchGroupMembership{research_group_id: ^group_id} ->
+        # Get pagination options
+        pagination_opts = pagination_opts_from_params(params)
+
+        # Get page
+        page = Research.list_crepe_events([membership_id: membership_id], pagination_opts)
+
+        render(conn, "index.json", crepe_events: page.entries, meta: page.metadata)
       end
   end
 
@@ -63,5 +79,34 @@ defmodule DriversSeatCoopWeb.ResearchGroupCrepeEventController do
     end
   end
 
+  defp pagination_opts_from_params(params) do
+    # Determine limit of rows to fetch
+    limit =
+      case params["limit"] do
+        nil -> 50
+        str ->
+          case Integer.parse(str) do
+            {int, _} -> min(int, 100) # Cap at 100
+            :error -> 50
+          end
+      end
 
+    opts = %{limit: limit}
+
+    # Determine if there's more rows after
+    opts =
+      case params["after"] do
+        nil -> opts
+        cursor -> Map.put(opts, :after, cursor)
+      end
+
+    # Determine if there's more rows before
+    opts =
+      case params["before"] do
+        nil -> opts
+        cursor -> Map.put(opts, :before, cursor)
+      end
+
+    opts
+  end
 end

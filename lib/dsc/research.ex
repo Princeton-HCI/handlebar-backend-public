@@ -33,7 +33,8 @@ defmodule DriversSeatCoop.Research do
   end
 
   @doc """
-  Lists all research groups that a user is currently an active member of.
+  Lists all research groups that a user is currently an active member of
+  and which role they have.
 
   Active means `unenrolled_at` is `nil`.
   """
@@ -42,7 +43,7 @@ defmodule DriversSeatCoop.Research do
       join: m in ResearchGroupMembership,
       on: m.research_group_id == rg.id,
       where: m.user_id == ^user_id and is_nil(m.unenrolled_at),
-      select: rg,
+      select: %{group: rg, role: m.role},
       order_by: [asc: rg.name]
     )
     |> Repo.all()
@@ -245,6 +246,13 @@ defmodule DriversSeatCoop.Research do
     Ecto.Multi.new()
     |> enroll_user_multi(user_id, research_group_id, role)
     |> Repo.transaction()
+    |> case do
+      {:ok, %{enroll: membership}} ->
+        {:ok, Repo.preload(membership, :user)}
+
+      {:error, _op, reason, _changes} ->
+        {:error, reason}
+    end
   end
 
   defp enroll_user_multi(multi, user_id, research_group_id, role) do
@@ -252,11 +260,12 @@ defmodule DriversSeatCoop.Research do
     attrs = %{role: role, enrolled_at: DateTime.utc_now()}
 
     changeset = ResearchGroupMembership.changeset(membership, attrs)
-    Ecto.Multi.insert(multi, "enroll #{research_group_id}", changeset,
+    Ecto.Multi.insert(multi, :enroll, changeset,
       on_conflict: [
         set: [unenrolled_at: nil, enrolled_at: DateTime.utc_now(), role: role]
       ],
-      conflict_target: [:research_group_id, :user_id]
+      conflict_target: [:research_group_id, :user_id],
+      returning: true
     )
   end
 
@@ -341,8 +350,8 @@ defmodule DriversSeatCoop.Research do
   end
 
   @doc """
-  Lists all distinct collectors and corresponding membership
-  for groups where the user is an active participant.
+  Lists all distinct collectors, corresponding membership IDs,
+  and corresponding group names where the user is an active participant.
   """
   def list_participant_collectors(user_id) do
     from(c in DriversSeatCoop.Crepe.Collector,
@@ -350,13 +359,15 @@ defmodule DriversSeatCoop.Research do
         on: rgc.collector_id == c.id,
       join: m in DriversSeatCoop.Research.ResearchGroupMembership,
         on: m.research_group_id == rgc.research_group_id,
+      join: rg in DriversSeatCoop.Research.ResearchGroup,
+        on: rg.id == m.research_group_id,
       where:
         m.user_id == ^user_id and
         is_nil(m.unenrolled_at) and
         m.role == "participant",
       left_join: df in assoc(c, :data_fields),
       preload: [data_fields: df],
-      select: {c, m.id},
+      select: {c, m.id, rg.name},
       distinct: true,
       order_by: [asc: c.app_name]
     )
@@ -381,6 +392,13 @@ defmodule DriversSeatCoop.Research do
       )
     end)
     |> Repo.transaction()
+    |> case do
+      {:ok, %{collector: collector}} ->
+        {:ok, Repo.preload(collector, :data_fields)}
+
+      {:error, step, changeset, changes_so_far} ->
+        {:error, step, changeset, changes_so_far}
+    end
   end
 
   @doc """
@@ -398,12 +416,28 @@ defmodule DriversSeatCoop.Research do
   # -------------------------
   # CREPE EVENTS
   # -------------------------
-  def list_crepe_events(filters \\ []) do
-    from(e in CrepeEvent)
-    |> maybe_join_membership(filters)
-    |> apply_crepe_event_filters(filters)
-    |> with_crepe_event_preloads()
-    |> Repo.all()
+  def list_crepe_events(filters \\ [], pagination_opts \\ %{}) do
+    # Base query
+    base_query = from(e in CrepeEvent)
+      |> maybe_join_membership(filters)
+      |> apply_crepe_event_filters(filters)
+      |> with_crepe_event_preloads()
+      |> order_by([e], [desc: e.collected_at, desc: e.id])
+
+    # cursor fields for pagination, newest first
+    cursor_fields = [{:collected_at, :desc}, {:id, :desc}]
+
+    # defaults
+    default_opts = %{
+      cursor_fields: cursor_fields,
+      limit: 50
+    }
+
+    opts_map = Map.merge(default_opts, pagination_opts)
+
+    opts_keyword = Keyword.new(opts_map)
+
+    Repo.paginate(base_query, opts_keyword)
   end
 
   defp maybe_join_membership(query, filters) do
@@ -465,11 +499,9 @@ defmodule DriversSeatCoop.Research do
   end
 
   defp with_crepe_event_preloads(query) do
-    # Preload the user, data fields and membership
+    # Preload the user, data fields membership, and research group
     query
-      |> order_by(desc: :collected_at)
-      |> distinct(:id)
-      |> preload([:user, :data_field, :membership])
+      |> preload([:user, :data_field, membership: :research_group])
   end
 
   def create_crepe_event(attrs, user_id) do

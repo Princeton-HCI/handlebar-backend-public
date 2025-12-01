@@ -13,9 +13,21 @@ defmodule DriversSeatCoopWeb.ResearchGroupMembershipController do
     group_id = String.to_integer(gid)
     memberships = Research.list_group_members(group_id)
 
-    render(conn, DriversSeatCoopWeb.ResearchGroupMembershipView, "index.json",
+    render(conn, "index.json",
       memberships: memberships
     )
+  end
+
+  # GET api/research/groups/:group_id/membership
+  def show_mine(conn, %{"group_id" => group_id}) do
+    user_id = conn.assigns.user.id
+
+    case Research.get_user_membership_for_group(user_id, String.to_integer(group_id)) do
+      nil ->
+        {:error, :not_found}
+      membership ->
+        render(conn, "show.json", membership: membership)
+    end
   end
 
   # POST /api/research/groups/:group_id/members
@@ -29,13 +41,18 @@ defmodule DriversSeatCoopWeb.ResearchGroupMembershipController do
 
       %Accounts.User{} = user ->
         case Research.get_user_membership_for_group(user.id, group_id) do
-          %ResearchGroupMembership{} = _m ->
+          %ResearchGroupMembership{} ->
             {:error, :conflict}
 
           nil ->
             case Research.enroll_user(user.id, group_id, "researcher") do
-              {:ok, _} ->
-                send_resp(conn, 201, "")
+              {:ok, membership} ->
+                # return newly created researcher
+                conn
+                |> put_status(:created)
+                |> render("member.json",
+                  research_group_membership: membership
+                )
 
               {:error, changeset} ->
                 {:error, changeset}
@@ -88,8 +105,8 @@ defmodule DriversSeatCoopWeb.ResearchGroupMembershipController do
         else
           case Research.update_membership(m, attrs) do
             {:ok, updated} ->
-              render(conn, DriversSeatCoopWeb.ResearchGroupMembershipView, "member.json",
-                research_group_membership: updated
+              render(conn, "show.json",
+                membership: updated
               )
 
             {:error, changeset} ->
