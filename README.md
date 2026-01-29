@@ -24,15 +24,15 @@ This will load in the schema from `structure.sql`.
 
 Future migrations can be done using `mix ecto.gen.migration`.
 
-- [ ] Run `ecto.create` and `ecto.load` on the database to stand up migrations
+- [x] Run `ecto.create` and `ecto.load` on the database to stand up migrations
 
 ### Other setup
-- [ ] Continue removing unused code
-- [ ] Update routing and endpoints in the handlebar app to use /handlebar instead of /crepe
+- [x] Continue removing unused code
+- [ ] Update routing and endpoints in the handlebar app to use /handlebar instead of /crepe -to be done today
 - [ ] Include database migrations in the build pipeline (see `run_google_cloud_migrations.sh` for an example)
 - [ ] Create a test database and test Cloud Run instance
 - [ ] I highly recommend **using a custom domain or subdomain** so that future updates can be done without managing different URLs on different app versions. This will also facilitate configuring a firewall, load balancers, etc. if needed later on.
-- [ ] Cut over the current Handlebar deploy to point at this new URL
+- [x] Cut over the current Handlebar deploy to point at this new URL
 - [ ] Move `SECRET_KEY_BASE` to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
 - [x] Move database password to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
 
