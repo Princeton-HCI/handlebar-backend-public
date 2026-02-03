@@ -29,7 +29,7 @@ Future migrations can be done using `mix ecto.gen.migration`.
 ### Other setup
 - [x] Continue removing unused code
 - [x] Update routing and endpoints in the handlebar app to use /handlebar instead of /crepe -to be done today
-- [x] Include database migrations in the build pipeline (see `run_google_cloud_migrations.sh` for an example)
+- [ ] Include database migrations in the build pipeline (see `run_google_cloud_migrations.sh` for an example)
 - [x] Create a test database and test Cloud Run instance
 - [ ] ~~I highly recommend **using a custom domain or subdomain** so that future updates can be done without managing different URLs on different app versions. This will also facilitate configuring a firewall, load balancers, etc. if needed later on.~~
 - [x] Cut over the current Handlebar deploy to point at this new URL
