@@ -33,7 +33,7 @@ Future migrations can be done using `mix ecto.gen.migration`.
 - [x] Create a test database and test Cloud Run instance
 - [ ] ~~I highly recommend **using a custom domain or subdomain** so that future updates can be done without managing different URLs on different app versions. This will also facilitate configuring a firewall, load balancers, etc. if needed later on.~~
 - [x] Cut over the current Handlebar deploy to point at this new URL
-- [ ] Move `SECRET_KEY_BASE` to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
+- [x] Move `SECRET_KEY_BASE` to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
 - [x] Move database password to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
 
 # Drivers Seat Coop Web and API
