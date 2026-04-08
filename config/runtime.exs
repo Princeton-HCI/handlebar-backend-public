@@ -27,17 +27,29 @@ config :dsc,
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 db_pool_size = System.get_env("POOL_SIZE") || "10"
 
-config :dsc, DriversSeatCoop.Repo,
-  # ssl: true,
-  socket_dir: "/cloudsql/#{System.get_env("CLOUD_SQL_CONNECTION_ID")}",
-  username: "postgres",
-  password: System.get_env("DB_PASSWORD"),
-  database: System.get_env("DB_NAME"),
-  pool_size: String.to_integer("#{db_pool_size}"),
-  timeout: 50_000,
-  connect_timeout: 50_000,
-  socket_options: maybe_ipv6,
-  types: DriversSeatCoop.PostgresTypes
+db_connection_opts =
+  if db_host = System.get_env("DB_HOST") do
+    [
+      hostname: db_host,
+      port: String.to_integer(System.get_env("DB_PORT") || "5432")
+    ]
+  else
+    [socket_dir: "/cloudsql/#{System.get_env("CLOUD_SQL_CONNECTION_ID")}"]
+  end
+
+config :dsc,
+       DriversSeatCoop.Repo,
+       [
+         # ssl: true,
+         username: "postgres",
+         password: System.get_env("DB_PASSWORD"),
+         database: System.get_env("DB_NAME"),
+         pool_size: String.to_integer("#{db_pool_size}"),
+         timeout: 50_000,
+         connect_timeout: 50_000,
+         socket_options: maybe_ipv6,
+         types: DriversSeatCoop.PostgresTypes
+       ] ++ db_connection_opts
 
 # The secret key base is used to sign/encrypt cookies and other secrets.
 # A default value is used in config/dev.exs and config/test.exs but you
