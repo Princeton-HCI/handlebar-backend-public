@@ -155,6 +155,9 @@ defmodule DriversSeatCoopWeb.Router do
           # List crepe events from participants
           get "/groups/:group_id/crepe-events", ResearchGroupCrepeEventController, :index_researcher_all_participants
           get "/groups/:group_id/members/:membership_id/crepe-events", ResearchGroupCrepeEventController, :index_researcher_single_participant
+
+          # Use LLM to translate and select graph queries
+          post "/groups/:group_id/llm/query-selection", ResearchGroupLlmController, :select_queries
         end
       end
 

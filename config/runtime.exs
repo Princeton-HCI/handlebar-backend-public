@@ -24,48 +24,6 @@ config :dsc,
   one_signal_api_key: System.get_env("ONE_SIGNAL_API_KEY"),
   one_signal_app_id: System.get_env("ONE_SIGNAL_APP_ID")
 
-maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
-db_pool_size = System.get_env("POOL_SIZE") || "10"
-
-config :dsc, DriversSeatCoop.Repo,
-  # ssl: true,
-  socket_dir: "/cloudsql/#{System.get_env("CLOUD_SQL_CONNECTION_ID")}",
-  username: "postgres",
-  password: System.get_env("DB_PASSWORD"),
-  database: System.get_env("DB_NAME"),
-  pool_size: String.to_integer("#{db_pool_size}"),
-  timeout: 50_000,
-  connect_timeout: 50_000,
-  socket_options: maybe_ipv6,
-  types: DriversSeatCoop.PostgresTypes
-
-# The secret key base is used to sign/encrypt cookies and other secrets.
-# A default value is used in config/dev.exs and config/test.exs but you
-# want to use a different value for prod and you most likely don't want
-# to check this value into version control, so we use an environment
-# variable instead.
-secret_key_base =
-  System.get_env("SECRET_KEY_BASE") ||
-    raise """
-    environment variable SECRET_KEY_BASE is missing.
-    You can generate one by calling: mix phx.gen.secret
-    """
-
-host = System.get_env("HOST") || "example.com"
-port = String.to_integer(System.get_env("PORT") || "4000")
-
-config :dsc, DriversSeatCoopWeb.Endpoint,
-  url: [host: host, port: 443, scheme: "https"],
-  http: [
-    # Bind on all interfaces using IPv4 (required for Cloud Run)
-    # Set it to  {127, 0, 0, 1} for local network only access.
-    # See the documentation on https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html
-    # for details about using IPv6 vs IPv4 and loopback vs public addresses.
-    ip: {0, 0, 0, 0},
-    port: port
-  ],
-  secret_key_base: secret_key_base
-
 terms_v1_id =
   case System.fetch_env("TERMS_V1_ID") do
     :error -> nil
@@ -87,8 +45,8 @@ config :dsc, DriversSeatCoop.Mixpanel,
   project_id: System.get_env("MIX_PANEL_PROJECT_ID"),
   project_token: System.get_env("MIX_PANEL_PROJECT_TOKEN")
 
-config :dsc, DriversSeatCoop.Help, forward_to_csv: System.get_env("HELP_REQUEST_EMAIL_CSV")
-
+config :dsc, DriversSeatCoop.Help,
+  forward_to_csv: System.get_env("HELP_REQUEST_EMAIL_CSV")
 
 config :dsc, DriversSeatCoopWeb.AppDowntimePlug,
   is_downtime?: System.get_env("MAINTENANCE_MODE_ENABLED") == "true",
@@ -106,3 +64,74 @@ config :dsc, DriversSeatCoop.LegacyDSC,
   url: System.get_env("LEGACY_DSC_URL"),
   login: System.get_env("LEGACY_DSC_LOGIN"),
   password: System.get_env("LEGACY_DSC_PASSWORD")
+
+if config_env() == :prod do
+  maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+  db_pool_size = System.get_env("POOL_SIZE") || "10"
+  cloudsql_conn_id = System.get_env("CLOUD_SQL_CONNECTION_ID")
+
+  repo_conn_opts =
+    if is_binary(cloudsql_conn_id) and cloudsql_conn_id != "" do
+      [
+        socket_dir: "/cloudsql/#{cloudsql_conn_id}",
+        socket_options: maybe_ipv6
+      ]
+    else
+      []
+    end
+
+  db_name =
+    System.get_env("DB_NAME") ||
+      raise """
+      environment variable DB_NAME is missing.
+      """
+
+  # The secret key base is used to sign/encrypt cookies and other secrets.
+  # A default value is used in config/dev.exs and config/test.exs but you
+  # want to use a different value for prod and you most likely don't want
+  # to check this value into version control, so we use an environment
+  # variable instead.
+  secret_key_base =
+    System.get_env("SECRET_KEY_BASE") ||
+      raise """
+      environment variable SECRET_KEY_BASE is missing.
+      You can generate one by calling: mix phx.gen.secret
+      """
+
+  openai_api_key =
+    System.get_env("OPENAI_API_KEY") ||
+      raise """
+      environment variable OPENAI_API_KEY is missing.
+      """
+
+  host = System.get_env("HOST") || "example.com"
+  port = String.to_integer(System.get_env("PORT") || "4000")
+
+  config :dsc, DriversSeatCoop.Repo,
+    repo_conn_opts ++
+      [
+        username: System.get_env("DB_USER") || "postgres",
+        password: System.get_env("DB_PASSWORD"),
+        database: db_name,
+        pool_size: String.to_integer(db_pool_size),
+        timeout: 50_000,
+        connect_timeout: 50_000,
+        types: DriversSeatCoop.PostgresTypes
+      ]
+
+  config :dsc, DriversSeatCoopWeb.Endpoint,
+    url: [host: host, port: 443, scheme: "https"],
+    http: [
+      ip: {0, 0, 0, 0},
+      port: port
+    ],
+    secret_key_base: secret_key_base
+
+  config :dsc, :openai,
+    api_key: openai_api_key,
+    base_url: "https://api.openai.com/v1"
+else
+  config :dsc, :openai,
+    api_key: System.get_env("OPENAI_API_KEY"),
+    base_url: "https://api.openai.com/v1"
+end

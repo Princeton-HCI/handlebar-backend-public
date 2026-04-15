@@ -2,27 +2,51 @@ import Config
 
 # Database configuration
 database_url = System.get_env("DATABASE_URL")
+db_name = System.get_env("DB_NAME")
+db_password = System.get_env("DB_PASSWORD") || "postgres"
+db_host = System.get_env("DB_HOST") || "127.0.0.1"
+db_port = String.to_integer(System.get_env("DB_PORT") || "8000")
 
-# In development, you can use a non-local database (like Heroku)
-# by setting the environment variable
-if is_nil(database_url) do
-  config :dsc, DriversSeatCoop.Repo,
-    username: "postgres",
-    password: "postgres",
-    database: "drivers_seat_coop_dev",
-    hostname: "localhost",
-    pool_size: 10,
-    show_sensitive_data_on_connection_error: true,
-    stacktrace: true,
-    types: DriversSeatCoop.PostgresTypes
-else
-  config :dsc, DriversSeatCoop.Repo,
-    # ssl: true,
-    url: database_url,
-    pool_size: 10,
-    show_sensitive_data_on_connection_error: true,
-    stacktrace: true,
-    types: DriversSeatCoop.PostgresTypes
+cond do
+  is_binary(database_url) and database_url != "" ->
+    config :dsc, DriversSeatCoop.Repo,
+      url: database_url,
+      pool_size: 10,
+      show_sensitive_data_on_connection_error: true,
+      stacktrace: true,
+      timeout: 50_000,
+      connect_timeout: 50_000,
+      types: DriversSeatCoop.PostgresTypes
+
+  is_binary(db_name) and db_name != "" ->
+    # Cloud SQL proxy or any other remote DB exposed on localhost
+    config :dsc, DriversSeatCoop.Repo,
+      username: System.get_env("DB_USER") || "postgres",
+      password: db_password,
+      database: db_name,
+      hostname: db_host,
+      port: db_port,
+      pool_size: 10,
+      show_sensitive_data_on_connection_error: true,
+      stacktrace: true,
+      timeout: 50_000,
+      connect_timeout: 50_000,
+      types: DriversSeatCoop.PostgresTypes
+
+  true ->
+    # Fully local Postgres fallback
+    config :dsc, DriversSeatCoop.Repo,
+      username: "postgres",
+      password: "postgres",
+      database: "drivers_seat_coop_dev",
+      hostname: "127.0.0.1",
+      port: 5432,
+      pool_size: 10,
+      show_sensitive_data_on_connection_error: true,
+      stacktrace: true,
+      timeout: 50_000,
+      connect_timeout: 50_000,
+      types: DriversSeatCoop.PostgresTypes
 end
 
 # For development, we disable any cache and enable

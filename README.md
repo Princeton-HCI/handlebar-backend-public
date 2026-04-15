@@ -1,32 +1,16 @@
-# UPDATE FROM DSC API + MIGRATION NOTES
+# Handlebar Backend
 
 This is the result of a migration kicked off by Andrew in October '25 to
 create a Handlebar API that excluded all unused functionality from the
 original DSC.
 
-## Current state
+## Current State
 
-## TODOs
+We currently have both production and staging backend services hosted in 
+Google Cloud Run, as well as corresponding databases created in Google
+Cloud SQL (`princeton-hci-wao-dsc:us-east1:handlebar-db` and `princeton-hci-wao-dsc:us-east1:handlebar-db-testing`).
 
-### Database configuration
-Right now there is an empty database with no migrations created at `princeton-hci-wao-dsc:us-east1:handlebar-db`.
-
-Migrations have been squashed into `structure.sql`.
-
-To set up the new database, run:
-
-```
-mix ecto.create
-mix ecto.load
-```
-
-This will load in the schema from `structure.sql`.
-
-Future migrations can be done using `mix ecto.gen.migration`.
-
-- [x] Run `ecto.create` and `ecto.load` on the database to stand up migrations
-
-### Other setup
+### Remaining setup
 - [x] Continue removing unused code
 - [x] Update routing and endpoints in the handlebar app to use /handlebar instead of /crepe -to be done today
 - [x] Include database migrations in the build pipeline (see `run_google_cloud_migrations.sh` for an example)
@@ -35,17 +19,6 @@ Future migrations can be done using `mix ecto.gen.migration`.
 - [x] Cut over the current Handlebar deploy to point at this new URL
 - [x] Move `SECRET_KEY_BASE` to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
 - [x] Move database password to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
-
-# Drivers Seat Coop Web and API
-
-Related Projects:
-
-- [Mobile Application (dsc-mobile)](https://github.com/Princeton-HCI/dsc-mobile)
-
-The API server:
-
-- Provides an API interface for the app
-- Host static content (for marketing campaigns and for help)
 
 ## Tech Stack
 

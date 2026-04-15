@@ -516,6 +516,284 @@ defmodule DriversSeatCoop.Research do
     end
   end
 
+  # Primary method to SELECT and DESCRIBE queries with an OpenAI LLM call
+  # If successful, should return:
+  # {:ok,
+  #  %{
+  #    101 => %{
+  #      best_index: 1,
+  #      descriptions: %{
+  #        "0" => "element with text Price",
+  #        "1" => "clickable element that has a child with text Price"
+  #      }
+  #    },
+  #    102 => %{
+  #      best_index: 0,
+  #      descriptions: %{
+  #        "0" => "input field with hint text Email"
+  #      }
+  #    }
+  #  }}
+  def select_and_describe_queries_with_llm(group_id, user_description, entities) do
+    with :ok <- validate_llm_query_selection_input(group_id, user_description, entities),
+        prompt <- build_llm_query_selection_prompt(user_description, entities),
+        {:ok, raw_content} <- call_openai_for_query_selection(prompt),
+        {:ok, parsed_results} <- parse_llm_query_selection_response(raw_content) do
+      {:ok, parsed_results}
+    end
+  end
+
+  # Input validation for LLM call
+  defp validate_llm_query_selection_input(group_id, user_description, entities) do
+    cond do
+      not is_integer(group_id) or group_id <= 0 ->
+        {:error, :invalid_group_id}
+
+      not is_binary(user_description) or String.trim(user_description) == "" ->
+        {:error, :invalid_user_description}
+
+      not is_list(entities) or entities == [] ->
+        {:error, :invalid_entities}
+
+      true ->
+        :ok
+    end
+  end
+
+  ######################
+  # ----- PROMPT ------
+  ######################
+
+  # Constructs the prompt to be fed to the LLM for eval + selection
+  defp build_llm_query_selection_prompt(user_description, entities) do
+    # Construct queries for each entity
+    entity_blocks =
+      entities
+      |> Enum.map(&build_entity_prompt_block/1)
+      |> Enum.join("\n\n")
+
+    """
+    You are given graph queries used to locate UI elements.
+
+    TASKS:
+    1. For EACH entity, translate EACH query into a short natural language description.
+    2. For EACH entity, select which query BEST matches the user's description.
+
+    User description:
+    #{user_description}
+
+    Entities and queries:
+    #{entity_blocks}
+
+    Examples:
+    Query: HAS_TEXT("Submit")
+    Description: element with text "Submit"
+
+    Query: HAS_CHILD_TEXT("Price") AND IS_CLICKABLE
+    Description: clickable element that has a child with text "Price"
+
+    OUTPUT FORMAT (STRICT JSON ONLY):
+    {
+      "results": {
+        "123": {
+          "best_index": 0,
+          "descriptions": {
+            "0": "...",
+            "1": "..."
+          }
+        },
+        "456": {
+          "best_index": 1,
+          "descriptions": {
+            "0": "...",
+            "1": "..."
+          }
+        }
+      }
+    }
+
+    Rules:
+    - Return JSON only
+    - No markdown
+    - No explanation outside JSON
+    - "results" must include every entity_id provided
+    - "best_index" must be a valid integer index for that entity
+    - "descriptions" must include all indices for that entity
+    """
+  end
+
+  defp build_entity_prompt_block(%{"entity_id" => entity_id, "queries" => queries}) do
+    query_lines =
+      queries
+      |> Enum.map(fn %{"index" => index, "query" => query} ->
+        "#{index}: #{query}"
+      end)
+      |> Enum.join("\n")
+
+    """
+    Entity ID: #{entity_id}
+    Queries:
+    #{query_lines}
+    """
+  end
+
+  defp build_entity_prompt_block(%{entity_id: entity_id, queries: queries}) do
+    query_lines =
+      queries
+      |> Enum.map(fn %{index: index, query: query} ->
+        "#{index}: #{query}"
+      end)
+      |> Enum.join("\n")
+
+    """
+    Entity ID: #{entity_id}
+    Queries:
+    #{query_lines}
+    """
+  end
+
+  ##########################
+  # ----- OPENAI CALL ------
+  ##########################
+
+
+  # Do HTTP request to OpenAI and extract the response
+  defp call_openai_for_query_selection(prompt) do
+    api_key = openai_api_key()
+    base_url = openai_base_url()
+
+    body = %{
+      model: "gpt-4.1-mini",
+      input: prompt
+    }
+
+    case Req.post("#{base_url}/responses",
+          json: body,
+          headers: [
+            {"authorization", "Bearer #{api_key}"},
+            {"content-type", "application/json"}
+          ]
+        ) do
+      {:ok, %Req.Response{status: 200, body: response_body}} ->
+        case extract_response_text(response_body) do
+          {:ok, text} -> {:ok, text}
+          {:error, reason} -> {:error, reason}
+        end
+
+      {:ok, %Req.Response{status: status, body: body}} ->
+        {:error, {:openai_http_error, status, body}}
+
+      {:error, reason} ->
+        {:error, {:openai_request_failed, reason}}
+    end
+  end
+
+  defp extract_response_text(%{"output" => output}) when is_list(output) do
+    text =
+      output
+      |> Enum.flat_map(fn item ->
+        Map.get(item, "content", [])
+      end)
+      |> Enum.filter(fn content_item ->
+        Map.get(content_item, "type") == "output_text"
+      end)
+      |> Enum.map_join("", fn content_item ->
+        Map.get(content_item, "text", "")
+      end)
+
+    if String.trim(text) == "" do
+      {:error, :empty_openai_response_text}
+    else
+      {:ok, text}
+    end
+  end
+
+  defp extract_response_text(_), do: {:error, :unexpected_openai_response_shape}
+
+  # Parse and normalize the structured JSON into what the frontend expects
+  defp parse_llm_query_selection_response(raw_content) when is_binary(raw_content) do
+    cleaned =
+      raw_content
+      |> String.trim()
+      |> strip_wrapping_code_fence()
+
+    case Jason.decode(cleaned) do
+      {:ok, %{"results" => results}} when is_map(results) ->
+        {:ok, parse_llm_results_map(results)}
+
+      {:ok, _other} ->
+        {:error, :invalid_llm_json_shape}
+
+      {:error, reason} ->
+        {:error, {:invalid_llm_json, reason}}
+    end
+  end
+
+  # Parse the decoded JSON into an Elixir map
+  defp parse_llm_results_map(results) do
+    Enum.reduce(results, %{}, fn {entity_id_str, value}, acc ->
+      case parse_single_llm_entity_result(entity_id_str, value) do
+        {:ok, entity_id, parsed} ->
+          Map.put(acc, entity_id, parsed)
+
+        :error ->
+          acc
+      end
+    end)
+  end
+
+  # Parse the LLM result for a single entity
+  defp parse_single_llm_entity_result(entity_id_str, %{
+        "best_index" => best_index,
+        "descriptions" => descriptions
+      })
+      when is_integer(best_index) and is_map(descriptions) do
+    case Integer.parse(to_string(entity_id_str)) do
+      {entity_id, ""} ->
+        normalized_descriptions =
+          Enum.reduce(descriptions, %{}, fn {k, v}, acc ->
+            case Integer.parse(to_string(k)) do
+              {_idx, ""} ->
+                Map.put(acc, to_string(k), to_string(v))
+
+              _ ->
+                acc
+            end
+          end)
+
+        {:ok, entity_id,
+        %{
+          best_index: best_index,
+          descriptions: normalized_descriptions
+        }}
+
+      _ ->
+        :error
+    end
+  end
+
+  defp parse_single_llm_entity_result(_entity_id_str, _value), do: :error
+
+  defp strip_wrapping_code_fence(text) do
+    text
+    |> String.replace(~r/^```json\s*/i, "")
+    |> String.replace(~r/^```\s*/i, "")
+    |> String.replace(~r/\s*```$/, "")
+    |> String.trim()
+  end
+
+  defp openai_config do
+    Application.fetch_env!(:dsc, :openai)
+  end
+
+  defp openai_api_key do
+    Keyword.fetch!(openai_config(), :api_key)
+  end
+
+  defp openai_base_url do
+    Keyword.fetch!(openai_config(), :base_url)
+  end
+
   def query_membership, do: from(m in ResearchGroupMembership)
 
   def query_membership_filter_active(qry), do: where(qry, [m], is_nil(m.unenrolled_at))
