@@ -9,7 +9,7 @@ fi
 
 # Set environment-specific variables
 if [ "$1" = "production" ]; then
-  export CLOUD_SQL_CONNECTION_ID="princeton-hci-wao-dsc:us-east1:handlebar-db"
+  export CLOUD_SQL_CONNECTION_ID="up-ist-wao:us-east1:handlebar-db"
   export DB_NAME="handlebar_db"
   read -p "Are you sure you want to run migrations on the **PRODUCTION** database? (y/n): " confirm
   if [ "$confirm" != "y" ]; then
@@ -26,12 +26,12 @@ fi
 # ---------------------
 
 # GCP Project ID
-export PROJECT_ID="princeton-hci-wao-dsc"
+export PROJECT_ID="up-ist-wao"
 
 # GCP Region where your Cloud Run Service and Cloud SQL instance are located
 export REGION="us-east1"
 echo
-echo "Go to https://console.cloud.google.com/run?hl=en&project=princeton-hci-wao-dsc (with an authenticated GCP account),"
+echo "Go to https://console.cloud.google.com/run?hl=en&project=up-ist-wao (with an authenticated GCP account),"
 echo "click on the service you want to run migrations for, go to the 'Revisions' tab, and find the image path on the right panel."
 echo 
 read -p "Enter the full Docker image URL (including @sha256 digest): " FULL_IMAGE_URL
