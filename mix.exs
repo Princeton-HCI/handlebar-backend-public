@@ -64,6 +64,7 @@ defmodule DriversSeatCoop.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:paginator, "~> 1.2.0"},
       {:postgrex, ">= 0.0.0"},
+      {:req, "~> 0.5"},
       {:sentry, "~> 8.0"},
       {:stream_gzip, "~> 0.4.2"},
       {:swoosh, "~> 1.3"},
