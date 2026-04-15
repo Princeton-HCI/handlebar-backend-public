@@ -8,6 +8,8 @@ defmodule DriversSeatCoop.Research do
 
   import Ecto.Query, warn: false
 
+  require Logger
+
   alias DriversSeatCoop.Repo
   alias DriversSeatCoop.Crepe.Collector
   alias DriversSeatCoop.Crepe.CrepeEvent
@@ -537,9 +539,16 @@ defmodule DriversSeatCoop.Research do
   def select_and_describe_queries_with_llm(group_id, user_description, entities) do
     with :ok <- validate_llm_query_selection_input(group_id, user_description, entities),
         prompt <- build_llm_query_selection_prompt(user_description, entities),
+        _ <- Logger.info("LLM query selection: built prompt for group #{group_id}"),
         {:ok, raw_content} <- call_openai_for_query_selection(prompt),
+        _ <- Logger.debug("LLM query selection raw content: #{inspect(raw_content)}"),
         {:ok, parsed_results} <- parse_llm_query_selection_response(raw_content) do
       {:ok, parsed_results}
+    else
+      {:error, reason} = err ->
+        Logger.error("LLM query selection failed: #{inspect(reason)}")
+        err
+
     end
   end
 
@@ -672,7 +681,8 @@ defmodule DriversSeatCoop.Research do
           headers: [
             {"authorization", "Bearer #{api_key}"},
             {"content-type", "application/json"}
-          ]
+          ],
+          receive_timeout: 60_000
         ) do
       {:ok, %Req.Response{status: 200, body: response_body}} ->
         case extract_response_text(response_body) do

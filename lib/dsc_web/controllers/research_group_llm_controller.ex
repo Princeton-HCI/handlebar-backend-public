@@ -33,8 +33,24 @@ defmodule DriversSeatCoopWeb.ResearchGroupLlmController do
       {:ok, results} ->
         render(conn, "batch_selection.json", results: results)
 
+      {:error, {:openai_request_failed, %Req.TransportError{reason: :timeout}}} ->
+        conn
+        |> put_status(:gateway_timeout)
+        |> json(%{error: "OpenAI request timed out"})
+
+      {:error, {:openai_http_error, status, body}} ->
+        conn
+        |> put_status(:bad_gateway)
+        |> json(%{
+          error: "OpenAI returned an error",
+          upstream_status: status,
+          details: body
+        })
+
       {:error, reason} ->
-        {:error, reason}
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: inspect(reason)})
     end
   end
 end
