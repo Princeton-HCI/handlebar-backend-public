@@ -3,6 +3,7 @@ defmodule DriversSeatCoopWeb.ResearchGroupController do
 
   alias DriversSeatCoop.Research
   alias DriversSeatCoop.Research.ResearchGroup
+  alias DriversSeatCoop.Research.ResearchGroupMembership
 
   action_fallback DriversSeatCoopWeb.FallbackController
 
@@ -21,6 +22,28 @@ defmodule DriversSeatCoopWeb.ResearchGroupController do
 
       %ResearchGroup{} = rg ->
         render(conn, "show.json", research_group: rg)
+    end
+  end
+
+  # GET /api/research/groups/code/:code
+  def show_by_code(conn, %{"code" => code}) do
+    user_id = conn.assigns.user.id
+
+    case Research.get_research_group_by_case_insensitive_code(code) do
+      nil ->
+        {:error, :not_found}
+
+      %ResearchGroup{} = rg ->
+        # SECURITY CHECK: Is the user actually enrolled in this group?
+        case Research.get_user_membership_for_group(user_id, rg.id) do
+          %ResearchGroupMembership{} ->
+            # They are a member. Safe to return the full details.
+            render(conn, "show.json", research_group: rg)
+
+          nil ->
+            # Not a member. Return 404.
+            {:error, :not_found}
+        end
     end
   end
 
