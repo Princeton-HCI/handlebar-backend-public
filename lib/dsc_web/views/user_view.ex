@@ -9,6 +9,7 @@ defmodule DriversSeatCoopWeb.UserView do
   def render("user.json", %{user: user}) do
     %{
       id: user.id,
+      role: user.role,
       agreed_to_current_terms: Map.get(user, :agreed_to_current_terms, false),
       car_ownership: user.car_ownership,
       contact_permission: user.contact_permission,

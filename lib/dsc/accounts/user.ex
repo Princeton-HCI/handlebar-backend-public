@@ -7,7 +7,7 @@ defmodule DriversSeatCoop.Accounts.User do
 
   @not_avail :not_in_changeset
   @valid_app_channels ["alpha", "beta", "prod"]
-  @valid_roles ["admin"]
+  @valid_roles ["admin", "participant", "researcher"]
   @valid_vehicle_types ["bike", "car", "e-bike", "moped", "rickshaw"]
   @working_day_end_time ~T[04:00:00]
   @required_fields ~w(email)a
@@ -78,7 +78,7 @@ defmodule DriversSeatCoop.Accounts.User do
     field :enrolled_research_at, :naive_datetime_usec
     field :unenrolled_research_at, :naive_datetime_usec
 
-    field :role, :string
+    field :role, :string, default: "participant"
     field :ethnicity, {:array, :string}
 
     field :password_hash, :string
@@ -260,12 +260,6 @@ defmodule DriversSeatCoop.Accounts.User do
       else
         changeset
       end
-
-    if get_change(changeset, :referral_code) do
-      try_put_referral_source_id(changeset)
-    else
-      changeset
-    end
   end
 
   def admin_changeset(user, attrs) do
@@ -274,34 +268,15 @@ defmodule DriversSeatCoop.Accounts.User do
     changeset(user, attrs)
   end
 
-  def registration_changeset(user, attrs) do
+def registration_changeset(user, attrs) do
     user
-    |> cast(attrs, [:password])
+    # 1. Cast the role here so it is ONLY accepted during account creation
+    |> cast(attrs, [:password, :role])
     |> validate_required([:password])
+    # 2. Make sure they didn't try to pass a fake role
+    |> validate_inclusion(:role, @valid_roles)
     |> validate_length(:password, min: 8, max: 100)
     |> put_password_hash()
-  end
-
-  def try_put_referral_source_id(changeset) do
-    case changeset do
-      %Ecto.Changeset{valid?: true, changes: %{referral_code: nil}} ->
-        put_change(changeset, :referral_source_id, nil)
-        |> put_change(:referral_code, nil)
-
-      %Ecto.Changeset{valid?: true, changes: %{referral_code: ref_code}} ->
-        # Referral sources functionality removed
-        case nil do
-          nil ->
-            add_error(changeset, :referral_code, "referral code not found")
-
-          %{is_active: false} ->
-            add_error(changeset, :referral_code, "referral code is no longer active")
-
-          %{is_active: true} = referral_source ->
-            put_change(changeset, :referral_source_id, referral_source.id)
-            |> put_change(:referral_code, nil)
-        end
-    end
   end
 
   def reset_password_changeset(user) do

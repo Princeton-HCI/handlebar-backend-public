@@ -97,6 +97,11 @@ defmodule DriversSeatCoopWeb.Router do
     get "/terms/public", TermsController, :public
     post "/help/request/public", HelpController, :create
 
+    scope "/research" do
+      # Lookup a group via code
+      get "/groups/lookup/:code", ResearchGroupController, :lookup
+    end
+
     scope "/" do
       pipe_through :authenticated
 
@@ -116,8 +121,8 @@ defmodule DriversSeatCoopWeb.Router do
         # List and create research groups
         resources "/groups", ResearchGroupController, only: [:index, :show, :create]
 
-        # Lookup a group via code
-        get "/groups/lookup/:code", ResearchGroupController, :lookup
+        # Get the detail of a research group via code
+        get "/groups/code/:code", ResearchGroupController, :show_by_code
 
         # List collectors for a research group
         get "/groups/:group_id/collectors", ResearchGroupCollectorController, :index_group

@@ -4,6 +4,8 @@ defmodule DriversSeatCoopWeb.UserController do
   alias DriversSeatCoop.{Accounts, Authorizer, Shifts}
   alias DriversSeatCoop.Accounts.User
   alias DriversSeatCoop.Legal
+  alias DriversSeatCoop.Research
+  alias DriversSeatCoop.Research.ResearchGroup
   alias DriversSeatCoop.Notifications.Oban.CTAEarningsInsights
   alias DriversSeatCoopWeb.AuthenticationPlug
   alias DriversSeatCoopWeb.UserValidator
@@ -20,6 +22,22 @@ defmodule DriversSeatCoopWeb.UserController do
 
       # newly created users cannot have accepted terms
       user = user |> Map.put(:agreed_to_current_terms, false)
+
+      # Grab the code from the raw params, and check the role on the newly created user
+      code = user_params["referral_code"]
+      if is_binary(code) and String.trim(code) != "" and user.role == "participant" do
+        case Research.get_research_group_by_case_insensitive_code(code) do
+          %ResearchGroup{} = rg ->
+            # They are a brand new participant with a valid code. Enroll them.
+            Research.enroll_user(user.id, rg.id, "participant")
+
+          nil ->
+            # The frontend should have validated this code, but if a bad one slips
+            # through, we just log it and move on so their login doesn't fail.
+            require Logger
+            Logger.warning("New user #{user.id} signed up with invalid study code: #{code}")
+        end
+      end
 
       conn
       |> put_status(:created)
