@@ -23,14 +23,17 @@ defmodule DriversSeatCoopWeb.UserController do
       # newly created users cannot have accepted terms
       user = user |> Map.put(:agreed_to_current_terms, false)
 
-      # Enrollment logic
+      # Grab the code from the raw params, and check the role on the newly created user
       code = user_params["referral_code"]
       if is_binary(code) and String.trim(code) != "" and user.role == "participant" do
         case Research.get_research_group_by_case_insensitive_code(code) do
           %ResearchGroup{} = rg ->
+            # They are a brand new participant with a valid code. Enroll them.
             Research.enroll_user(user.id, rg.id, "participant")
 
           nil ->
+            # The frontend should have validated this code, but if a bad one slips
+            # through, we just log it and move on so their login doesn't fail.
             require Logger
             Logger.warning("New user #{user.id} signed up with invalid study code: #{code}")
         end
@@ -41,24 +44,6 @@ defmodule DriversSeatCoopWeb.UserController do
       |> put_resp_header("location", Routes.user_path(conn, :show, user))
       |> AuthenticationPlug.put_auth_header(token)
       |> render("show.json", user: user)
-    else
-      {:error, %Ecto.Changeset{} = changeset} ->
-        # Log the detailed error map to your console
-        require Logger
-        errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-          Enum.reduce(opts, msg, fn {key, value}, acc ->
-            String.replace(acc, "%{#{key}}", to_string(value))
-          end)
-        end)
-
-        Logger.error("SIGNUP VALIDATION FAILED: #{inspect(errors)}")
-
-        # Pass it back to FallbackController to send the 422 to the frontend
-        {:error, changeset}
-
-      error ->
-        # Catch-all for any other unexpected error shapes
-        error
     end
   end
 
