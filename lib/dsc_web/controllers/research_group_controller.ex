@@ -16,35 +16,9 @@ defmodule DriversSeatCoopWeb.ResearchGroupController do
 
   # GET /api/research/groups/:id
   def show(conn, %{"id" => id}) do
-    case Research.get_research_group(String.to_integer(id)) do
-      nil ->
-        {:error, :not_found}
-
-      %ResearchGroup{} = rg ->
-        render(conn, "show.json", research_group: rg)
-    end
-  end
-
-  # GET /api/research/groups/code/:code
-  def show_by_code(conn, %{"code" => code}) do
-    user_id = conn.assigns.user.id
-
-    case Research.get_research_group_by_case_insensitive_code(code) do
-      nil ->
-        {:error, :not_found}
-
-      %ResearchGroup{} = rg ->
-        # SECURITY CHECK: Is the user actually enrolled in this group?
-        case Research.get_user_membership_for_group(user_id, rg.id) do
-          %ResearchGroupMembership{} ->
-            # They are a member. Safe to return the full details.
-            render(conn, "show.json", research_group: rg)
-
-          nil ->
-            # Not a member. Return 404.
-            {:error, :not_found}
-        end
-    end
+    group_id = conn.assigns.research_group_id
+    rg = Research.get_research_group(group_id)
+    render(conn, "show.json", research_group: rg)
   end
 
   # GET /api/research/groups/lookup/:code
@@ -59,49 +33,29 @@ defmodule DriversSeatCoopWeb.ResearchGroupController do
 
   # POST /api/research/groups
   def create(conn, %{"research_group" => attrs}) do
-    user_id = conn.assigns.user.id
-    attrs = Map.put(attrs, "user_id", user_id)
+    attrs = Map.put(attrs, "user_id", conn.assigns.user.id)
 
     case Research.create_research_group(attrs) do
-      {:ok, %ResearchGroup{} = rg} ->
-        # return newly created group back
+      {:ok, rg} ->
         conn
         |> put_status(:created)
-        |> put_resp_header("location", Routes.research_group_path(conn, :show, rg))
         |> render("create.json", research_group: %{group: rg, role: "researcher"})
-
       {:error, changeset} -> {:error, changeset}
     end
   end
 
   # PATCH /api/research/groups/:id
   def update(conn, %{"id" => id, "research_group" => attrs}) do
-    case Research.get_research_group(String.to_integer(id)) do
-      nil ->
-        {:error, :not_found}
-
-      %ResearchGroup{} = rg ->
-        case Research.update_research_group(rg, attrs) do
-          {:ok, %ResearchGroup{} = rg} ->
-            render(conn, "show.json", research_group: rg)
-
-          {:error, changeset} ->
-            {:error, changeset}
-        end
+    rg = Research.get_research_group(conn.assigns.research_group_id)
+    case Research.update_research_group(rg, attrs) do
+      {:ok, rg} -> render(conn, "show.json", research_group: rg)
+      {:error, changeset} -> {:error, changeset}
     end
   end
 
   # DELETE /api/research/groups/:id
   def delete(conn, %{"id" => id}) do
-    case Research.get_research_group(String.to_integer(id)) do
-      nil ->
-        {:error, :not_found}
-
-      %ResearchGroup{} = rg ->
-        case Research.delete_research_group(rg) do
-          {:ok, _} -> send_resp(conn, 204, "")
-          {:error, changeset} -> {:error, changeset}
-        end
-    end
+    rg = Research.get_research_group(conn.assigns.research_group_id)
+    with {:ok, _} <- Research.delete_research_group(rg), do: send_resp(conn, 204, "")
   end
 end

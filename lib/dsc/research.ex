@@ -191,6 +191,20 @@ defmodule DriversSeatCoop.Research do
   end
 
   @doc """
+  Lists only the active researchers of a research group.
+  """
+  def list_group_researchers(group_id) do
+    from(m in ResearchGroupMembership,
+      join: u in assoc(m, :user),
+      # Filter by role and ensure they are still active
+      where: m.research_group_id == ^group_id and m.role == "researcher" and m.is_active == true,
+      preload: [user: u],
+      order_by: [asc: u.last_name, asc: u.first_name]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
   Gets a membership by its ID.
 
   Returns `nil` if it does not exist.
