@@ -34,48 +34,33 @@ defmodule DriversSeatCoopWeb.ResearchGroupCrepeEventController do
   end
 
   # GET /api/research/groups/:group_id/crepe-events
-  def index_researcher_all_participants(conn, %{"group_id" => gid} = params) do
-    group_id = String.to_integer(gid)
-
-    # Fetch events for this group with the 'participant' role
+  def index_researcher_all_participants(conn, params) do
+    group_id = conn.assigns.research_group_id
     filters = [group_id: group_id, role: "participant"]
 
-    # Get pagination options
-    pagination_opts = pagination_opts_from_params(params)
-
-    # Get page
-    page = Research.list_crepe_events(filters, pagination_opts)
-
+    page = Research.list_crepe_events(filters, pagination_opts_from_params(params))
     render(conn, "index.json", crepe_events: page.entries, meta: page.metadata)
   end
 
   # GET /api/research/groups/:group_id/members/:membership_id/crepe-events
-  def index_researcher_single_participant(conn, %{"group_id" => gid, "membership_id" => mid} = params) do
-    group_id = String.to_integer(gid)
+  def index_researcher_single_participant(conn, %{"membership_id" => mid} = params) do
     membership_id = String.to_integer(mid)
 
-    case Research.get_membership_by_id(membership_id) do
-      nil ->
-        {:error, :not_found}
-
-      %ResearchGroupMembership{research_group_id: ^group_id} ->
-        # Get pagination options
-        pagination_opts = pagination_opts_from_params(params)
-
-        # Get page
-        page = Research.list_crepe_events([membership_id: membership_id], pagination_opts)
-
-        render(conn, "index.json", crepe_events: page.entries, meta: page.metadata)
-      end
+    page = Research.list_crepe_events([membership_id: membership_id], pagination_opts_from_params(params))
+    render(conn, "index.json", crepe_events: page.entries, meta: page.metadata)
   end
 
   # POST /api/research/crepe-event
-  def create(conn, params) do
-    with {:ok, params} <- DriversSeatCoopWeb.CrepeEventValidator.create(params),
-         {:ok, %{crepe_event: _, notification: _notification}} <-
-           Research.create_crepe_event(params, conn.assigns.user.id) do
+  def create(conn, %{"crepe_event" => event_params}) do
+    user_id = conn.assigns.user.id
+    membership_id = conn.assigns.membership_id
 
-        send_resp(conn, 201, "")
+    # Ensure the params use the verified membership_id from the URL, not the body
+    params = Map.put(event_params, "membership_id", membership_id)
+
+    with {:ok, validated_params} <- DriversSeatCoopWeb.CrepeEventValidator.create(params),
+        {:ok, _result} <- Research.create_crepe_event(validated_params, user_id) do
+      send_resp(conn, 201, "")
     end
   end
 

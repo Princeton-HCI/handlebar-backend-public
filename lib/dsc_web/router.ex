@@ -51,6 +51,10 @@ defmodule DriversSeatCoopWeb.Router do
     plug DriversSeatCoopWeb.AdminOnlyPlug
   end
 
+  pipeline :group_member_only do
+    plug DriversSeatCoopWeb.EnsureGroupMemberPlug
+  end
+
   pipeline :researcher_only do
     plug DriversSeatCoopWeb.ResearcherPlug
   end
@@ -98,7 +102,6 @@ defmodule DriversSeatCoopWeb.Router do
     post "/help/request/public", HelpController, :create
 
     scope "/research" do
-      # Lookup a group via code
       get "/groups/lookup/:code", ResearchGroupController, :lookup
     end
 
@@ -114,54 +117,70 @@ defmodule DriversSeatCoopWeb.Router do
       post "/help/request/authenticated", HelpController, :create
     end
 
-    scope "/" do
+    scope "/research" do
+      # ============================================================
+      # 1. GLOBAL RESEARCH ROUTES
+      # Actions that don't require membership yet (Joining, Listing personal studies)
+      # ============================================================
       pipe_through :authenticated_and_terms_required
 
-      scope "/research" do
-        # List and create research groups
-        resources "/groups", ResearchGroupController, only: [:index, :show, :create]
+      # List groups the user is in or Create a new group
+      resources "/groups", ResearchGroupController, only: [:index, :create]
 
-        # Get the detail of a research group via code
-        get "/groups/code/:code", ResearchGroupController, :show_by_code
+      # Join a group via code
+      post "/memberships/join", ResearchGroupMembershipController, :join
 
-        # List collectors for a research group
+      # Global personal data views
+      get "/me/collectors", ResearchGroupCollectorController, :index_participant
+      get "/me/crepe-events", ResearchGroupCrepeEventController, :index_participant
+
+      # Event submission (usually from background service)
+      post "/crepe-event", ResearchGroupCrepeEventController, :create
+
+      # ============================================================
+      # 2. GROUP MEMBER ROUTES (Participants & Researchers)
+      # Requires the user to be an active member of the group.
+      # ============================================================
+      scope "/" do
+        pipe_through :group_member_only
+
+        # View specific group details (protected by membership)
+        get "/groups/:id", ResearchGroupController, :show
+
+        # List ONLY researchers (The route we just added for participants)
+        get "/groups/:group_id/researchers", ResearchGroupMembershipController, :index_researchers
+
+        # View my specific membership data
+        get "/groups/:group_id/membership", ResearchGroupMembershipController, :show_mine
+
+        # List collectors allowed for this group
         get "/groups/:group_id/collectors", ResearchGroupCollectorController, :index_group
 
-        # List all collectors for groups the user is an active participant for
-        get "/me/collectors", ResearchGroupCollectorController, :index_participant
-
-        # List all crepe events for the current user
-        get "/me/crepe-events", ResearchGroupCrepeEventController, :index_participant
-
-        # Membership self-service
-        get "/groups/:group_id/membership", ResearchGroupMembershipController, :show_mine
-        post "/memberships/join", ResearchGroupMembershipController, :join
+        # Membership self-service (Update policy or Leave)
         patch "/memberships/:membership_id", ResearchGroupMembershipController, :update
         delete "/memberships/:membership_id", ResearchGroupMembershipController, :leave
 
         # Creates a crepe event from data sent by a collector
-        post "/crepe-event", ResearchGroupCrepeEventController, :create
+        post "/memberships/:membership_id/crepe-events", ResearchGroupCrepeEventController, :create
 
         scope "/" do
           pipe_through :researcher_only
 
-          # Update/delete groups
+          # Update group settings or Delete the study
           resources "/groups", ResearchGroupController, only: [:update, :delete]
 
-          # Manage research group membership
+          # Full Member Management
           get "/groups/:group_id/members", ResearchGroupMembershipController, :index
           post "/groups/:group_id/members", ResearchGroupMembershipController, :create_researcher
           delete "/groups/:group_id/members/:membership_id", ResearchGroupMembershipController, :kick
 
-          # Create/delete collectors
+          # Collector management
           post "/groups/:group_id/collectors", ResearchGroupCollectorController, :create
           delete "/groups/:group_id/collectors/:collector_id", ResearchGroupCollectorController, :delete
 
-          # List crepe events from participants
+          # Use LLM to translate and select graph queries
           get "/groups/:group_id/crepe-events", ResearchGroupCrepeEventController, :index_researcher_all_participants
           get "/groups/:group_id/members/:membership_id/crepe-events", ResearchGroupCrepeEventController, :index_researcher_single_participant
-
-          # Use LLM to translate and select graph queries
           post "/groups/:group_id/llm/query-selection", ResearchGroupLlmController, :select_queries
         end
       end
