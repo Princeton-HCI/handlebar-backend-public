@@ -36,9 +36,6 @@ echo "click on the service you want to run migrations for, go to the 'Revisions'
 echo 
 read -p "Enter the full Docker image URL (including @sha256 digest): " FULL_IMAGE_URL
 
-# Elixir Release Name (from your _build/prod/rel/dsc/bin/migrate)
-export ELIXIR_RELEASE_NAME="handlebar"
-
 # Database Details
 echo
 echo "In the same panel as earlier, scroll down and find the 'Environment Variables' section."
@@ -87,7 +84,10 @@ echo "gcloud authenticated."
 JOB_NAME="migrate-handlebar-backend-$(date +%Y%m%d%H%M%S)"
 
 # Construct the gcloud command arguments as an array
+# NOTE: Always pass --project; gcloud otherwise uses `gcloud config get-value project`,
+# which may differ from PROJECT_ID above and will use that project's Cloud Run service agent.
 GCLOUD_ARGS=(
+  "--project=${PROJECT_ID}"
   "run" "jobs" "create" "${JOB_NAME}"
   "--image=${FULL_IMAGE_URL}"
   "--region=${REGION}"
@@ -111,8 +111,9 @@ echo "2. Creating Cloud Run Job: ${JOB_NAME}..."
 # Use "$GCLOUD_ARGS[@]" to correctly expand the array into separate arguments
 echo "--- START GCLOUD OUTPUT ---"
 gcloud "${GCLOUD_ARGS[@]}"
+create_status=$?
 echo "--- END GCLOUD OUTPUT ---"
-if [ $? -ne 0 ]; then
+if [ "$create_status" -ne 0 ]; then
   echo "Error: Cloud Run Job creation failed. Please check the command output and Cloud Logging for details."
   exit 1
 else
@@ -121,7 +122,7 @@ else
   echo "3. Executing Cloud Run Job and monitoring (Ctrl+C to stop waiting):"
   echo "--- START GCLOUD OUTPUT ---"
 
-  if gcloud run jobs execute "${JOB_NAME}" --region "${REGION}" --wait; then
+  if gcloud --project="${PROJECT_ID}" run jobs execute "${JOB_NAME}" --region "${REGION}" --wait; then
     echo "--- END GCLOUD OUTPUT ---"
     echo "Migration Job '${JOB_NAME}' completed successfully."
   else
@@ -132,7 +133,7 @@ else
   echo
   echo "You can check the detailed logs in the GCP Console under Cloud Run -> JOBS -> ${JOB_NAME} -> Logs tab."
   echo "This job definition will remain; you can delete it if no longer needed:"
-  echo "  gcloud run jobs delete ${JOB_NAME} --region ${REGION}"
+  echo "  gcloud --project=${PROJECT_ID} run jobs delete ${JOB_NAME} --region ${REGION}"
 fi
 
 echo "--- Script Finished ---"
