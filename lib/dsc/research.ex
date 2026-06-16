@@ -224,6 +224,25 @@ defmodule DriversSeatCoop.Research do
     |> Repo.one()
   end
 
+  @doc """
+  Verifies that `membership_id` refers to an active membership owned by `user_id`.
+
+  Used to authorize body-supplied membership ids (e.g. `POST /research/crepe-event`)
+  where no URL param drives `EnsureGroupMemberPlug`. Returns `{:ok, membership}` when
+  the caller owns the active membership, otherwise `{:error, :not_found}`.
+  """
+  def get_active_membership_for_user(user_id, membership_id) do
+    from(m in ResearchGroupMembership,
+      where: m.id == ^membership_id and m.user_id == ^user_id and is_nil(m.unenrolled_at),
+      limit: 1
+    )
+    |> Repo.one()
+    |> case do
+      nil -> {:error, :not_found}
+      membership -> {:ok, membership}
+    end
+  end
+
   def only_active_researcher?(group_id) do
     active_researchers_count =
       from(m in ResearchGroupMembership,

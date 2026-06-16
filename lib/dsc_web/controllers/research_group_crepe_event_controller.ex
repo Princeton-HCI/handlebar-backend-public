@@ -2,7 +2,6 @@ defmodule DriversSeatCoopWeb.ResearchGroupCrepeEventController do
   use DriversSeatCoopWeb, :controller
 
   alias DriversSeatCoop.Research
-  alias DriversSeatCoop.Research.ResearchGroupMembership
 
   action_fallback DriversSeatCoopWeb.FallbackController
 
@@ -51,15 +50,18 @@ defmodule DriversSeatCoopWeb.ResearchGroupCrepeEventController do
   end
 
   # POST /api/research/crepe-event
-  def create(conn, %{"crepe_event" => event_params}) do
+  #
+  # This route lives in the global research scope (no URL membership param), so the
+  # membership_id arrives in the body. We validate the payload, then verify the caller
+  # actually owns that active membership before inserting — a body-supplied membership_id
+  # is never trusted on its own. A foreign or stale membership yields 404 via the fallback.
+  def create(conn, %{"crepe_event" => _} = params) do
     user_id = conn.assigns.user.id
-    membership_id = conn.assigns.membership_id
-
-    # Ensure the params use the verified membership_id from the URL, not the body
-    params = Map.put(event_params, "membership_id", membership_id)
 
     with {:ok, validated_params} <- DriversSeatCoopWeb.CrepeEventValidator.create(params),
-        {:ok, _result} <- Research.create_crepe_event(validated_params, user_id) do
+         {:ok, _membership} <-
+           Research.get_active_membership_for_user(user_id, validated_params.membership_id),
+         {:ok, _result} <- Research.create_crepe_event(validated_params, user_id) do
       send_resp(conn, 201, "")
     end
   end

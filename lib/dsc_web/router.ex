@@ -160,9 +160,6 @@ defmodule DriversSeatCoopWeb.Router do
         patch "/memberships/:membership_id", ResearchGroupMembershipController, :update
         delete "/memberships/:membership_id", ResearchGroupMembershipController, :leave
 
-        # Creates a crepe event from data sent by a collector
-        post "/memberships/:membership_id/crepe-events", ResearchGroupCrepeEventController, :create
-
         scope "/" do
           pipe_through :researcher_only
 
