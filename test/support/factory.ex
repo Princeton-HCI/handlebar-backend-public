@@ -113,13 +113,16 @@ defmodule DriversSeatCoop.Factory do
 
   def create_research_group(attrs \\ %{}) do
     valid_attrs = %{
-      name: "Research",
-      description: "Describing the group",
-      code: "rsrch"
+      "name" => "Research",
+      "description" => "Describing the group",
+      "code" => "rsrch"
     }
 
+    # Research.create_research_group/1 reads/writes string keys, so normalize
+    # whatever callers pass (usually atom keys) before merging.
     {:ok, research_group} =
       attrs
+      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
       |> Enum.into(valid_attrs)
       |> Research.create_research_group()
 
@@ -141,6 +144,15 @@ defmodule DriversSeatCoop.Factory do
       |> Legal.create_terms(user_id)
 
     terms
+  end
+
+  @doc """
+  Accepts whatever the current %Terms{} is so `user` can get past
+  DriversSeatCoopWeb.LatestTermsPlug.
+  """
+  def accept_current_terms(user) do
+    terms = Legal.get_current_term() || create_terms()
+    create_accepted_terms(%{user_id: user.id, terms_id: terms.id})
   end
 
   def create_accepted_terms(attrs \\ %{}) do
