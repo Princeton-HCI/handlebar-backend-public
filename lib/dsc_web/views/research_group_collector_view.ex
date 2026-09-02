@@ -26,6 +26,7 @@ defmodule DriversSeatCoopWeb.ResearchGroupCollectorView do
       app_name: c.app_name,
       app_package: c.app_package,
       description: c.description,
+      collection_interval_seconds: c.collection_interval_seconds,
       datafields: render_many(c.data_fields, __MODULE__, "data_field.json", as: :df)
     }
   end

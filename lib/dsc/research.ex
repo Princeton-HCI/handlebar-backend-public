@@ -437,6 +437,37 @@ defmodule DriversSeatCoop.Research do
   end
 
   @doc """
+  Gets a single collector attached to a research group, with its
+  `data_fields` preloaded.
+
+  Returns `nil` if the collector is not attached to that group.
+  """
+  def get_group_collector(group_id, collector_id) do
+    from(c in Collector,
+      join: rgc in ResearchGroupCollector, on: rgc.collector_id == c.id,
+      where: rgc.research_group_id == ^group_id and c.id == ^collector_id,
+      preload: [:data_fields],
+      limit: 1
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Applies a partial update to a collector.
+
+  Only the keys present in `attrs` are changed; data fields are untouched.
+  """
+  def update_collector(%Collector{} = collector, %{} = attrs) do
+    collector
+    |> Collector.update_changeset(attrs)
+    |> Repo.update()
+    |> case do
+      {:ok, collector} -> {:ok, Repo.preload(collector, :data_fields, force: true)}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
+  @doc """
   Deletes a research group collector and the underlying collector record.
 
   This assumes the collector is not shared across multiple groups. If

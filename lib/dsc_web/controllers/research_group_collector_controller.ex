@@ -37,6 +37,24 @@ defmodule DriversSeatCoopWeb.ResearchGroupCollectorController do
     end
   end
 
+  # PATCH /api/research/groups/:group_id/collectors/:collector_id
+  # body: { "collector": { "description": ..., "collection_interval_seconds": ... } }
+  # Partial update: only the keys present in the body are applied.
+  def update(conn, %{"group_id" => gid, "collector_id" => cid, "collector" => collector_params}) do
+    group_id = String.to_integer(gid)
+    collector_id = String.to_integer(cid)
+
+    case Research.get_group_collector(group_id, collector_id) do
+      nil ->
+        {:error, :not_found}
+
+      collector ->
+        with {:ok, collector} <- Research.update_collector(collector, collector_params) do
+          render(conn, "show.json", collector: collector)
+        end
+    end
+  end
+
   # DELETE /api/research/groups/:group_id/collectors/:collector_id
   def delete(conn, %{"group_id" => gid, "collector_id" => cid}) do
     group_id = String.to_integer(gid)
