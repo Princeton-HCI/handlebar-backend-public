@@ -173,6 +173,7 @@ defmodule DriversSeatCoopWeb.Router do
 
           # Collector management
           post "/groups/:group_id/collectors", ResearchGroupCollectorController, :create
+          patch "/groups/:group_id/collectors/:collector_id", ResearchGroupCollectorController, :update
           delete "/groups/:group_id/collectors/:collector_id", ResearchGroupCollectorController, :delete
 
           # Use LLM to translate and select graph queries

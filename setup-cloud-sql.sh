@@ -4,7 +4,7 @@
 
 set -e
 
-PROJECT_ID="princeton-hci-wao-dsc"
+PROJECT_ID="up-ist-wao"
 REGION="us-east1"
 INSTANCE_NAME="handlebar-db"
 DB_NAME="handlebar_db"
@@ -62,6 +62,8 @@ echo "📡 Connection name: $CONNECTION_NAME"
 echo "Starting Cloud SQL Proxy on port 5432..."
 ./cloud-sql-proxy $CONNECTION_NAME --port 5432 &
 PROXY_PID=$!
+# Ensure the proxy is stopped on any exit (including a psql failure under `set -e`).
+trap 'kill $PROXY_PID 2>/dev/null || true' EXIT
 sleep 3
 
 # Enable PostGIS
@@ -71,6 +73,7 @@ PGPASSWORD=$DB_PASSWORD psql -h localhost -U $DB_USER -d $DB_NAME -c "CREATE EXT
 
 # Stop proxy
 kill $PROXY_PID 2>/dev/null || true
+trap - EXIT
 
 echo ""
 echo "✅ Cloud SQL setup complete!"

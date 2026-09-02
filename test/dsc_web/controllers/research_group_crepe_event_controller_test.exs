@@ -14,6 +14,7 @@ defmodule DriversSeatCoopWeb.ResearchGroupCrepeEventControllerTest do
   # POST /crepe-event body needs.
   defp setup_participant(_) do
     user = Factory.create_user()
+    Factory.accept_current_terms(user)
     group = Factory.create_research_group()
     membership = create_membership(user.id, group.id)
 
@@ -80,6 +81,7 @@ defmodule DriversSeatCoopWeb.ResearchGroupCrepeEventControllerTest do
 
       # A different user attempting to write against someone else's membership id.
       other_user = Factory.create_user()
+      Factory.accept_current_terms(other_user)
       _ = create_membership(other_user.id, group.id)
 
       conn =
