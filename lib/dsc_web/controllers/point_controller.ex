@@ -2,6 +2,7 @@ defmodule DriversSeatCoopWeb.PointController do
   use DriversSeatCoopWeb, :controller
   require Logger
   alias DriversSeatCoop.Driving
+  alias DriversSeatCoop.Research
 
   plug DriversSeatCoopWeb.AuthenticationPlug
   action_fallback DriversSeatCoopWeb.FallbackController
@@ -21,6 +22,11 @@ defmodule DriversSeatCoopWeb.PointController do
   is not used on our side. Instead, the currently authenticated user_id is passed to the Point
   creation function and used to create points.
 
+  Handlebar additionally sends "membership_id" under "extras" to attribute the point
+  to a study. It is verified against the caller's active memberships below; points
+  claiming a membership the caller does not own are dropped rather than stored
+  unattributed, so they cannot escape that study's retention policy.
+
   The app will send a bulk array of points, currently capped at 60 on the app's side.
 
   Points created are not rendered back in the response as they aren't used by the app.
@@ -38,6 +44,8 @@ defmodule DriversSeatCoopWeb.PointController do
         device.id
       end
 
+    user_id = conn.assigns.user.id
+
     points_params =
       Enum.map(points_params, fn params ->
         with {:ok, coords} <- Map.fetch(params, "coords"),
@@ -50,6 +58,7 @@ defmodule DriversSeatCoopWeb.PointController do
           battery_level = get_in(params, ["battery", "level"])
           battery_is_charging = get_in(params, ["battery", "is_charging"])
           is_moving = Map.get(params, "is_moving")
+          membership_id = normalize_membership_id(Map.get(new_params, "membership_id"))
 
           Map.put(new_params, "recorded_at", timestamp)
           |> Map.put("activity_type", activity_type)
@@ -57,13 +66,15 @@ defmodule DriversSeatCoopWeb.PointController do
           |> Map.put("battery_level", battery_level)
           |> Map.put("battery_is_charging", battery_is_charging)
           |> Map.put("is_moving", is_moving)
+          |> Map.put("membership_id", membership_id)
         else
           _ ->
             %{}
         end
       end)
+      |> reject_unowned_memberships(user_id)
 
-    case Driving.create_points(points_params, conn.assigns.user.id, device_id) do
+    case Driving.create_points(points_params, user_id, device_id) do
       {:ok, _points} ->
         nil
 
@@ -77,4 +88,49 @@ defmodule DriversSeatCoopWeb.PointController do
     conn
     |> send_resp(:no_content, "")
   end
+
+  # A body-supplied membership_id is never trusted on its own. Each distinct id
+  # in the batch is checked once; points naming an unowned membership are
+  # dropped, matching this endpoint's existing "silently skip bad points"
+  # behaviour rather than failing the whole upload.
+  defp reject_unowned_memberships(points_params, user_id) do
+    claimed =
+      points_params
+      |> Enum.map(&Map.get(&1, "membership_id"))
+      |> Enum.reject(&is_nil/1)
+      |> Enum.uniq()
+
+    owned =
+      claimed
+      |> Enum.filter(fn membership_id ->
+        match?({:ok, _}, Research.get_active_membership_for_user(user_id, membership_id))
+      end)
+      |> MapSet.new()
+
+    Enum.reject(points_params, fn params ->
+      membership_id = Map.get(params, "membership_id")
+
+      if not is_nil(membership_id) and not MapSet.member?(owned, membership_id) do
+        Logger.warn(
+          "dropping point for membership_id #{inspect(membership_id)} not owned by user #{user_id}"
+        )
+
+        true
+      else
+        false
+      end
+    end)
+  end
+
+  defp normalize_membership_id(nil), do: nil
+  defp normalize_membership_id(id) when is_integer(id), do: id
+
+  defp normalize_membership_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int, ""} -> int
+      _ -> nil
+    end
+  end
+
+  defp normalize_membership_id(_), do: nil
 end

@@ -2,6 +2,8 @@ defmodule DriversSeatCoopWeb.PointControllerTest do
   use DriversSeatCoopWeb.ConnCase, async: true
   alias DriversSeatCoop.Devices
   alias DriversSeatCoop.Driving
+  alias DriversSeatCoop.Repo
+  alias DriversSeatCoop.Research.ResearchGroupMembership
 
   @create_attrs %{
     activity: %{confidence: 100, type: "still"},
@@ -318,6 +320,104 @@ defmodule DriversSeatCoopWeb.PointControllerTest do
       # all points are accepted
       points = Driving.list_points()
       assert length(points) == 4
+    end
+  end
+
+  describe "study attribution via extras.membership_id" do
+    setup %{user: user} do
+      group = Factory.create_research_group()
+
+      membership =
+        %ResearchGroupMembership{}
+        |> ResearchGroupMembership.changeset(%{
+          user_id: user.id,
+          research_group_id: group.id,
+          role: "participant",
+          enrolled_at: DateTime.utc_now() |> DateTime.truncate(:second),
+          retention_pref_on_unenroll: "keep_collected"
+        })
+        |> Repo.insert!()
+
+      %{group: group, membership: membership}
+    end
+
+    test "stores membership_id when the caller owns the membership", ctx do
+      %{conn: conn, membership: membership} = ctx
+
+      attrs = put_in(@create_attrs, [:extras, :membership_id], membership.id)
+
+      conn = post(conn, Routes.point_path(conn, :create), location: [attrs])
+      assert "" == response(conn, 204)
+
+      assert [point] = Driving.list_points()
+      assert point.membership_id == membership.id
+    end
+
+    test "stores a nil membership_id when none is supplied (legacy path)", %{conn: conn} do
+      conn = post(conn, Routes.point_path(conn, :create), location: [@create_attrs])
+      assert "" == response(conn, 204)
+
+      assert [point] = Driving.list_points()
+      assert is_nil(point.membership_id)
+    end
+
+    test "drops points claiming a membership the caller does not own", %{conn: conn} do
+      other_user = Factory.create_user()
+      other_group = Factory.create_research_group()
+
+      other_membership =
+        %ResearchGroupMembership{}
+        |> ResearchGroupMembership.changeset(%{
+          user_id: other_user.id,
+          research_group_id: other_group.id,
+          role: "participant",
+          enrolled_at: DateTime.utc_now() |> DateTime.truncate(:second),
+          retention_pref_on_unenroll: "keep_collected"
+        })
+        |> Repo.insert!()
+
+      attrs = put_in(@create_attrs, [:extras, :membership_id], other_membership.id)
+
+      conn = post(conn, Routes.point_path(conn, :create), location: [attrs])
+      # Still 204: this endpoint never reports per-point outcomes.
+      assert "" == response(conn, 204)
+
+      # Dropped rather than stored unattributed, so it cannot escape the
+      # other study's retention policy.
+      assert Driving.list_points() == []
+    end
+
+    test "keeps owned points in a batch that also contains an unowned one", ctx do
+      %{conn: conn, membership: membership} = ctx
+      other_user = Factory.create_user()
+      other_group = Factory.create_research_group()
+
+      other_membership =
+        %ResearchGroupMembership{}
+        |> ResearchGroupMembership.changeset(%{
+          user_id: other_user.id,
+          research_group_id: other_group.id,
+          role: "participant",
+          enrolled_at: DateTime.utc_now() |> DateTime.truncate(:second),
+          retention_pref_on_unenroll: "keep_collected"
+        })
+        |> Repo.insert!()
+
+      good =
+        @create_attrs
+        |> put_in([:extras, :membership_id], membership.id)
+        |> Map.put(:timestamp, ~N[2019-07-12 00:00:00])
+
+      bad =
+        @create_attrs
+        |> put_in([:extras, :membership_id], other_membership.id)
+        |> Map.put(:timestamp, ~N[2019-07-12 00:00:01])
+
+      conn = post(conn, Routes.point_path(conn, :create), location: [good, bad])
+      assert "" == response(conn, 204)
+
+      assert [point] = Driving.list_points()
+      assert point.membership_id == membership.id
     end
   end
 end

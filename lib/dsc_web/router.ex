@@ -132,6 +132,7 @@ defmodule DriversSeatCoopWeb.Router do
 
       # Global personal data views
       get "/me/collectors", ResearchGroupCollectorController, :index_participant
+      get "/me/sensors", ResearchGroupSensorController, :index_participant
       get "/me/crepe-events", ResearchGroupCrepeEventController, :index_participant
 
       # Event submission (usually from background service)
@@ -156,6 +157,9 @@ defmodule DriversSeatCoopWeb.Router do
         # List collectors allowed for this group
         get "/groups/:group_id/collectors", ResearchGroupCollectorController, :index_group
 
+        # List sensors (e.g. location) configured for this group
+        get "/groups/:group_id/sensors", ResearchGroupSensorController, :index_group
+
         # Membership self-service (Update policy or Leave)
         patch "/memberships/:membership_id", ResearchGroupMembershipController, :update
         delete "/memberships/:membership_id", ResearchGroupMembershipController, :leave
@@ -175,6 +179,11 @@ defmodule DriversSeatCoopWeb.Router do
           post "/groups/:group_id/collectors", ResearchGroupCollectorController, :create
           patch "/groups/:group_id/collectors/:collector_id", ResearchGroupCollectorController, :update
           delete "/groups/:group_id/collectors/:collector_id", ResearchGroupCollectorController, :delete
+
+          # Sensor management
+          post "/groups/:group_id/sensors", ResearchGroupSensorController, :create
+          patch "/groups/:group_id/sensors/:sensor_id", ResearchGroupSensorController, :update
+          delete "/groups/:group_id/sensors/:sensor_id", ResearchGroupSensorController, :delete
 
           # Use LLM to translate and select graph queries
           get "/groups/:group_id/crepe-events", ResearchGroupCrepeEventController, :index_researcher_all_participants

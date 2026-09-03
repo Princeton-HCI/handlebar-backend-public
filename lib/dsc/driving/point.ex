@@ -4,6 +4,7 @@ defmodule DriversSeatCoop.Driving.Point do
 
   alias DriversSeatCoop.Accounts.User
   alias DriversSeatCoop.Devices.Device
+  alias DriversSeatCoop.Research.ResearchGroupMembership
 
   @valid_statuses ~w(working not_working)
 
@@ -24,6 +25,7 @@ defmodule DriversSeatCoop.Driving.Point do
     battery_level
     heading
     is_moving
+    membership_id
     speed
   )a
 
@@ -47,6 +49,11 @@ defmodule DriversSeatCoop.Driving.Point do
     belongs_to(:user, User)
     belongs_to(:device, Device)
 
+    # Which study this point was collected for. nil for legacy Driver's Seat
+    # points, which have no study context. PointController verifies that a
+    # body-supplied membership_id is actually owned by the caller.
+    belongs_to(:membership, ResearchGroupMembership)
+
     timestamps()
   end
 
@@ -63,6 +70,7 @@ defmodule DriversSeatCoop.Driving.Point do
     |> cast_geometry()
     |> assoc_constraint(:user)
     |> assoc_constraint(:device)
+    |> assoc_constraint(:membership)
     |> validate_inclusion(:status, @valid_statuses)
     |> check_recorded_at()
     |> unique_constraint(:recorded_at, name: :points_user_id_recorded_at_index)

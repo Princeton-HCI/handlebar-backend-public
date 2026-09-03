@@ -16,6 +16,8 @@ defmodule DriversSeatCoop.Research do
   alias DriversSeatCoop.Research.ResearchGroup
   alias DriversSeatCoop.Research.ResearchGroupMembership
   alias DriversSeatCoop.Research.ResearchGroupCollector
+  alias DriversSeatCoop.Research.SensorConfig
+  alias DriversSeatCoop.Driving.Point
 
   # -------------------------
   # RESEARCH GROUPS
@@ -340,14 +342,24 @@ defmodule DriversSeatCoop.Research do
   end
 
   defp delete_all_collected_events(repo, user_id, group_id) do
-    qry =
+    events_qry =
       from ev in CrepeEvent,
         join: m in ResearchGroupMembership, on: m.id == ev.membership_id,
         where: m.user_id == ^user_id and m.research_group_id == ^group_id
 
-    {events_deleted, _} = repo.delete_all(qry)
+    {events_deleted, _} = repo.delete_all(events_qry)
 
-    {:ok, {:deleted, %{crepe_events: events_deleted}}}
+    # Location points collected for a study carry the same membership link that
+    # crepe events do, so the retention policy has to reach them too. Points with
+    # a nil membership_id are legacy Driver's Seat data and are left alone.
+    points_qry =
+      from p in Point,
+        join: m in ResearchGroupMembership, on: m.id == p.membership_id,
+        where: m.user_id == ^user_id and m.research_group_id == ^group_id
+
+    {points_deleted, _} = repo.delete_all(points_qry)
+
+    {:ok, {:deleted, %{crepe_events: events_deleted, points: points_deleted}}}
   end
 
   # -------------------------
@@ -880,5 +892,95 @@ defmodule DriversSeatCoop.Research do
   def query_membership_filter_users(qry, user_id_or_ids) do
     user_id_or_ids = List.wrap(user_id_or_ids)
     where(qry, [m], m.user_id in ^user_id_or_ids)
+  end
+
+  # -----------------------------
+  # RESEARCH GROUP SENSOR CONFIGS
+  # -----------------------------
+
+  @doc """
+  Lists every sensor config attached to a research group, enabled or not.
+
+  Used by the researcher-facing group view, which needs to show disabled
+  sensors so they can be re-enabled.
+  """
+  def list_group_sensor_configs(group_id) do
+    from(sc in SensorConfig,
+      where: sc.research_group_id == ^group_id,
+      order_by: [asc: sc.type]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single sensor config scoped to a research group.
+
+  Returns `nil` if the config does not belong to that group, which is what
+  makes a cross-group id a 404 rather than an accidental read.
+  """
+  def get_group_sensor_config(group_id, sensor_config_id) do
+    from(sc in SensorConfig,
+      where: sc.research_group_id == ^group_id and sc.id == ^sensor_config_id,
+      limit: 1
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Lists enabled sensor configs, their membership ids, and their group names for
+  every study where the user is an active participant.
+
+  Mirrors `list_participant_collectors/1`: the device stores the `membership_id`
+  and echoes it back when uploading samples, which is what makes the data
+  attributable to a study.
+
+  Disabled configs are filtered out here so a device that never refetches still
+  stops collecting when a researcher flips `enabled`.
+  """
+  def list_participant_sensor_configs(user_id) do
+    from(sc in SensorConfig,
+      join: m in ResearchGroupMembership,
+      on: m.research_group_id == sc.research_group_id,
+      join: rg in ResearchGroup,
+      on: rg.id == m.research_group_id,
+      where:
+        m.user_id == ^user_id and
+          is_nil(m.unenrolled_at) and
+          m.role == "participant" and
+          sc.enabled == true,
+      select: {sc, m.id, rg.name},
+      order_by: [asc: sc.type]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Creates a sensor config for a research group.
+
+  `group_id` comes from the route, not the body, so a request cannot target
+  another study's config.
+  """
+  def create_sensor_config(group_id, %{} = attrs) do
+    %SensorConfig{research_group_id: group_id}
+    |> SensorConfig.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Applies a partial update to a sensor config. Only keys present in `attrs`
+  are changed; `type` is fixed at creation.
+  """
+  def update_sensor_config(%SensorConfig{} = sensor_config, %{} = attrs) do
+    sensor_config
+    |> SensorConfig.update_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a sensor config. Samples already collected under it are untouched;
+  they are governed by the membership retention policy instead.
+  """
+  def delete_sensor_config(%SensorConfig{} = sensor_config) do
+    Repo.delete(sensor_config)
   end
 end
