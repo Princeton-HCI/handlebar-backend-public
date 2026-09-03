@@ -11,7 +11,7 @@ config :dsc, DriversSeatCoop.Repo,
   username: System.get_env("POSTGRES_USER") || "postgres",
   password: System.get_env("POSTGRES_PASSWORD") || "postgres",
   database:
-    "#{System.get_env("POSTGRES_DB") || "drivers_seat_coop_test"}#{System.get_env("MIX_TEST_PARTITION")}",
+    "#{System.get_env("POSTGRES_DB") || "handlebar_test"}#{System.get_env("MIX_TEST_PARTITION")}",
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox,
   types: DriversSeatCoop.PostgresTypes

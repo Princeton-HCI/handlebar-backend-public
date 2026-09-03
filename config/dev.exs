@@ -38,7 +38,7 @@ cond do
     config :dsc, DriversSeatCoop.Repo,
       username: "postgres",
       password: "postgres",
-      database: "drivers_seat_coop_dev",
+      database: "handlebar_dev",
       hostname: "127.0.0.1",
       port: 5432,
       pool_size: 10,

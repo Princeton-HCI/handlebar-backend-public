@@ -103,7 +103,7 @@ https://devheroes.io/en/erlang-elixir-macos-m1/
 
 ## Running Unit Tests
 
-Prior to running unit tests, you should have Postgresql installed and your postgres user configured.  Running the unit tests will create a test database `drivers_seat_coop_test`.
+Prior to running unit tests, you should have Postgresql installed and your postgres user configured.  Running the unit tests will create a test database `handlebar_test`.
 
 ```shell
 mix test
