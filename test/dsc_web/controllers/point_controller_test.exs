@@ -33,6 +33,9 @@ defmodule DriversSeatCoopWeb.PointControllerTest do
 
   setup %{conn: conn} do
     user = Factory.create_user()
+    # The points route runs through LatestTermsPlug, which 451s until the user
+    # has accepted the current terms (seeded by the initial-terms migration).
+    Factory.accept_current_terms(user)
 
     conn =
       put_req_header(conn, "accept", "application/json")
