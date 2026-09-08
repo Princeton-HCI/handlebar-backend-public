@@ -27,6 +27,55 @@ defmodule DriversSeatCoop.Driving do
     Repo.all(Point)
   end
 
+  @doc """
+  Lists study-attributed location points, newest first, cursor paginated.
+
+  Mirrors `Research.list_crepe_events/2` so the client can page location data
+  the same way it pages screen data. Only points carrying a `membership_id` are
+  returned — legacy Driver's Seat points have no study context and are not
+  research data.
+
+  Supported filters: `:membership_id`, `:group_id`, `:user_id`.
+
+  Returns Point structs rather than a select map so cursor pagination keeps
+  working; latitude and longitude are read off the `Geo.Point` geometry in the
+  view rather than via ST_Y/ST_X here.
+  """
+  def list_study_points(filters \\ [], pagination_opts \\ %{}) do
+    base_query =
+      from(p in Point,
+        join: m in DriversSeatCoop.Research.ResearchGroupMembership,
+        on: m.id == p.membership_id,
+        where: not is_nil(p.membership_id),
+        order_by: [desc: p.recorded_at, desc: p.id]
+      )
+      |> apply_study_point_filters(filters)
+
+    default_opts = %{
+      cursor_fields: [{:recorded_at, :desc}, {:id, :desc}],
+      limit: 50
+    }
+
+    Repo.paginate(base_query, Keyword.new(Map.merge(default_opts, pagination_opts)))
+  end
+
+  defp apply_study_point_filters(query, filters) do
+    Enum.reduce(filters, query, fn
+      {:membership_id, id}, q ->
+        where(q, [p], p.membership_id == ^id)
+
+      {:group_id, id}, q ->
+        group_id = if is_binary(id), do: String.to_integer(id), else: id
+        where(q, [p, m], m.research_group_id == ^group_id)
+
+      {:user_id, id}, q ->
+        where(q, [p], p.user_id == ^id)
+
+      _, q ->
+        q
+    end)
+  end
+
   def query_points_by_user_id(user_id, params \\ %{}) do
     query =
       from(p in Point,

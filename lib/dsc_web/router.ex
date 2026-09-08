@@ -134,6 +134,7 @@ defmodule DriversSeatCoopWeb.Router do
       get "/me/collectors", ResearchGroupCollectorController, :index_participant
       get "/me/sensors", ResearchGroupSensorController, :index_participant
       get "/me/crepe-events", ResearchGroupCrepeEventController, :index_participant
+      get "/me/points", PointController, :index_participant
 
       # Event submission (usually from background service)
       post "/crepe-event", ResearchGroupCrepeEventController, :create
@@ -188,6 +189,8 @@ defmodule DriversSeatCoopWeb.Router do
           # Use LLM to translate and select graph queries
           get "/groups/:group_id/crepe-events", ResearchGroupCrepeEventController, :index_researcher_all_participants
           get "/groups/:group_id/members/:membership_id/crepe-events", ResearchGroupCrepeEventController, :index_researcher_single_participant
+          get "/groups/:group_id/points", PointController, :index_researcher_all_participants
+          get "/groups/:group_id/members/:membership_id/points", PointController, :index_researcher_single_participant
           post "/groups/:group_id/llm/query-selection", ResearchGroupLlmController, :select_queries
         end
       end

@@ -31,6 +31,74 @@ defmodule DriversSeatCoopWeb.PointController do
 
   Points created are not rendered back in the response as they aren't used by the app.
   """
+  # GET /api/research/me/points
+  # GET /api/research/me/points?group_id=...
+  def index_participant(conn, params) do
+    filters = [user_id: conn.assigns.user.id]
+
+    filters =
+      if group_id = params["group_id"] do
+        [{:group_id, group_id} | filters]
+      else
+        filters
+      end
+
+    page = Driving.list_study_points(filters, pagination_opts_from_params(params))
+    render(conn, "index.json", points: page.entries, meta: page.metadata)
+  end
+
+  # GET /api/research/groups/:group_id/points
+  def index_researcher_all_participants(conn, params) do
+    group_id = conn.assigns.research_group_id
+
+    page =
+      Driving.list_study_points([group_id: group_id], pagination_opts_from_params(params))
+
+    render(conn, "index.json", points: page.entries, meta: page.metadata)
+  end
+
+  # GET /api/research/groups/:group_id/members/:membership_id/points
+  def index_researcher_single_participant(conn, %{"membership_id" => mid} = params) do
+    membership_id = String.to_integer(mid)
+
+    page =
+      Driving.list_study_points(
+        [membership_id: membership_id],
+        pagination_opts_from_params(params)
+      )
+
+    render(conn, "index.json", points: page.entries, meta: page.metadata)
+  end
+
+  # Mirrors the helper in ResearchGroupCrepeEventController so both timelines
+  # page identically from the client's point of view.
+  defp pagination_opts_from_params(params) do
+    limit =
+      case params["limit"] do
+        nil ->
+          50
+
+        str ->
+          case Integer.parse(str) do
+            {int, _} -> min(int, 100)
+            :error -> 50
+          end
+      end
+
+    opts = %{limit: limit}
+
+    opts =
+      case params["after"] do
+        nil -> opts
+        cursor -> Map.put(opts, :after, cursor)
+      end
+
+    case params["before"] do
+      nil -> opts
+      cursor -> Map.put(opts, :before, cursor)
+    end
+  end
+
   def create(conn, %{"location" => points_params}) do
     points_params = List.wrap(points_params)
     coords_attributes = ["latitude", "longitude", "accuracy", "speed", "heading", "altitude"]
