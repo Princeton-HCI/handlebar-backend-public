@@ -133,6 +133,25 @@ defmodule DriversSeatCoopWeb.ResearchGroupSensorControllerTest do
       assert data["trigger_collector_id"] == collector.id
     end
 
+    test "nils a timeout supplied with an always trigger", ctx do
+      %{conn: conn, researcher: researcher, group: group} = ctx
+
+      conn =
+        TestHelpers.put_auth_header(conn, researcher)
+        |> post(
+          Routes.research_group_sensor_path(conn, :create, group.id),
+          sensor_body(%{
+            "trigger_type" => "always",
+            "trigger_app_package" => nil,
+            "timeout_seconds" => 3600
+          })
+        )
+
+      # An always trigger never stops, so a stored timeout would be dead
+      # config that every client then renders as a real limit.
+      assert json_response(conn, 201)["data"]["timeout_seconds"] == nil
+    end
+
     test "accepts an always trigger with no target", ctx do
       %{conn: conn, researcher: researcher, group: group} = ctx
 

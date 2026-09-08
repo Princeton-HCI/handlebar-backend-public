@@ -81,7 +81,17 @@ defmodule DriversSeatCoop.Research.SensorConfig do
     |> validate_number(:sample_interval_seconds, greater_than: 0)
     |> validate_number(:timeout_seconds, greater_than_or_equal_to: 0)
     |> validate_trigger_target()
+    |> normalize_timeout()
     |> foreign_key_constraint(:trigger_collector_id)
+  end
+
+  # always triggers never have timeouts
+  defp normalize_timeout(changeset) do
+    if get_field(changeset, :trigger_type) == "always" do
+      put_change(changeset, :timeout_seconds, nil)
+    else
+      changeset
+    end
   end
 
   # Validated against the merged state: get_field/2 falls back to the persisted
