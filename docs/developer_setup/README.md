@@ -1,27 +1,15 @@
-# dc notes from install
+# Developer Setup
 
-- no docker containers w hexpm on the right versions here.
-- seems like erlang 25.3.2 might work since there's an appropriate image.
-- installing that version on mac os M1 is a bit of a pain.
+There are no prebuilt dev container images with hexpm set up for the right Erlang/Elixir versions here, so this is a native install. On Apple Silicon, Erlang 25.3.2 is the version known to build cleanly; the install needs a couple of extra flags:
 
-on mac os M1:
-
-- for unixodbc:
-
-```
+```shell
 brew install unixodbc
 sudo ln -s $(realpath $(brew --prefix unixodbc)) /usr/local/odbc
-```
 
-- instal without `wx`:
-```
 KERL_CONFIGURE_OPTIONS="--without-wx --without-javac" asdf install erlang 25.3.2
 ```
 
-some more info here:
-https://devheroes.io/en/erlang-elixir-macos-m1/
-
-# Developer Setup
+See also the [asdf-erlang OpenSSL notes for macOS](https://devheroes.io/en/erlang-elixir-macos-m1/) if the build still fails.
 
 1. **Clone this repo locally**
 2. **Install Prerequisites**

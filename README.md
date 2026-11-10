@@ -1,80 +1,119 @@
 # Handlebar Backend
 
-This is the result of a migration kicked off by Andrew in October '25 to
-create a Handlebar API that excluded all unused functionality from the
-original DSC.
+Handlebar is an Android app that records screens during gig delivery work (DoorDash, Uber Eats, Grubhub, etc.) and lets researchers build "collectors" that turn those recordings into structured data. This repository is the backend API that the Handlebar mobile app talks to: it handles user authentication, study and collector management, uploaded data, and researcher-facing admin tooling.
 
-## Current State
+Related repositories:
 
-We currently have both production and staging backend services hosted in 
-Google Cloud Run, as well as corresponding databases created in Google
-Cloud SQL (`princeton-hci-wao-dsc:us-east1:handlebar-db` and `princeton-hci-wao-dsc:us-east1:handlebar-db-testing`).
+- [`handlebar`](https://github.com/Princeton-HCI/handlebar) — the Flutter mobile app
+- [`crepe-flutter-plugin`](https://github.com/Princeton-HCI/crepe-flutter-plugin) — the screen-recording/collector plugin the app depends on
 
-### Remaining setup
-- [x] Continue removing unused code
-- [x] Update routing and endpoints in the handlebar app to use /handlebar instead of /crepe -to be done today
-- [x] Include database migrations in the build pipeline (see `run_google_cloud_migrations.sh` for an example)
-- [x] Create a test database and test Cloud Run instance
-- [ ] ~~I highly recommend **using a custom domain or subdomain** so that future updates can be done without managing different URLs on different app versions. This will also facilitate configuring a firewall, load balancers, etc. if needed later on.~~
-- [x] Cut over the current Handlebar deploy to point at this new URL
-- [x] Move `SECRET_KEY_BASE` to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
-- [x] Move database password to [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en)
+This project started as a fork of [Driver's Seat Cooperative](https://driversseat.co)'s backend, with functionality unrelated to Handlebar removed. Some internal module and app names (`DriversSeatCoop`, `:dsc`) are left over from that history (for now).
 
 ## Tech Stack
 
-This project uses:
+- [Elixir](https://elixir-lang.org) / [Phoenix](https://www.phoenixframework.org)
+- [PostgreSQL](https://www.postgresql.org/) with [PostGIS](https://postgis.net/)
+- [Oban](https://hexdocs.pm/oban/Oban.html) for background jobs
+- Google Cloud Run / Cloud SQL in production (see [Deployment](#deployment))
 
-- [PostgreSQL](https://www.postgresql.org/) as the back-end database
-- [Elixir](https://elixir-lang.org) as the back-end language
-- [Phoenix](https://www.phoenixframework.org) as the web framework
-- [Oban](https://getoban.pro) for background job processing
-- Google Cloud for deployment
+### External services (optional in development)
 
-## External Services
+The app integrates with a few third-party services. None of these are required to run the server locally — each degrades gracefully or can be left unconfigured in dev/test:
 
-This project uses:
+- [SendGrid](https://sendgrid.com/) — outbound email (password resets, data export links, help requests)
+- [Mixpanel](https://mixpanel.com/) — usage analytics and population segmentation
+- [OneSignal](https://onesignal.com/) — push notifications
+- [Sentry](https://sentry.io/) — error reporting
+- [Backblaze B2](https://www.backblaze.com/cloud-storage) — storage for user data export files
 
-- [Mixpanel](https://mixpanel.com/)
-- [Sentry](https://sentry.io/welcome/)
-- [OneSignal](https://onesignal.com/)
+## Prerequisites
+
+- [Homebrew](https://brew.sh/) (macOS)
+- [asdf](https://asdf-vm.com/) for managing Erlang/Elixir versions
+- PostgreSQL with the PostGIS extension
+- Node.js (for asset building)
+
+```shell
+brew install asdf node postgresql postgis
+echo -e '\n. /opt/homebrew/opt/asdf/libexec/asdf.sh' >> ~/.zshrc
+```
+
+Make sure you have a local `postgres` role with password `postgres`, or adjust `DATABASE_URL` accordingly (see [Environment Variables](docs/environment_variables/README.md)).
+
+Install Erlang and Elixir via asdf (open a new shell first):
+
+```shell
+asdf plugin add erlang
+asdf plugin add elixir
+asdf install erlang 25.3.2.7
+asdf install elixir 1.14.0-otp-25
+asdf global erlang 25.3.2.7
+asdf global elixir 1.14.0-otp-25
+```
+
+On Apple Silicon, see the [asdf-erlang OpenSSL notes](https://github.com/asdf-vm/asdf-erlang?tab=readme-ov-file#dealing-with-openssl-issues-on-macos) if the Erlang install fails.
 
 ## Getting Started
 
-- [Setting-up a Development Environment](/docs/developer_setup/README.md)
-- [Environment Variables](/docs/environment_variables/README.md)
-- [Populating Geosptial Referece Data](/docs/populating_geographies/README.md)
+1. Clone this repo and fetch dependencies:
+
+   ```shell
+   mix deps.get
+   ```
+
+2. Create and migrate the database:
+
+   ```shell
+   mix ecto.create
+   mix ecto.migrate
+   ```
+
+3. Seed an initial admin user and terms-of-service record. This is required before the mobile app can connect, since it requires an accepted terms of service.
+
+   ```shell
+   mix run priv/repo/seeds.exs
+   ```
+
+4. (Optional) Load geospatial reference data used for metro-area assignment. See [Populating Geographic Data](docs/populating_geographies/README.md).
+
+5. Start the server:
+
+   ```shell
+   mix phx.server
+   ```
+
+   - API: `http://localhost:4000`
+   - Admin site: `http://localhost:4000/_admin`
+
+See [Environment Variables](docs/environment_variables/README.md) for the full list of configuration options, and [Developer Setup](docs/developer_setup/README.md) for more detailed platform-specific notes.
+
+## Running Tests
+
+```shell
+mix test
+```
+
+This creates and uses a separate `handlebar_test` database.
+
+## Code Quality
+
+```shell
+mix format
+mix credo --strict --all
+```
+
+## Background Jobs (Oban)
+
+Background work runs through [Oban](https://hexdocs.pm/oban/Oban.html). In development, most queues are disabled by default since many jobs call external services. Enable specific queues with:
+
+```shell
+export OBAN_QUEUES="update_timespans_for_user:1 update_timespans_for_user_workday:2 goals:2"
+```
 
 ## Deployment
 
-- Code is hosted on GitHub
-- The deployment is from Google Cloud
-- There is a staging and a production environemnt
-- Databases are in Google Cloud SQL
+The production and staging services run on Google Cloud Run, backed by Cloud SQL (PostgreSQL). Merges to `main` deploy to production; merges to `staging` deploy to staging, both via Cloud Build. Database migrations run via a Cloud Run job (see `run_google_cloud_migrations.sh`). Deployment is specific to the current maintainers' GCP project; reach out to the maintainers if you need to stand up your own hosted instance.
 
-### CI / CD pipeline
+## License
 
-- New commits to main will trigger new builds via Cloud Build
-- Builds in Cloud Build will deploy to Cloud Run
-- `main` corresponds to the production deployment. Merges to `main` will auto-build to production.
-- `staging` corresponds to the staging deployment. Merges to `staging` will auto-build to staging.
-
-### Running migrations after merging to main
-
-The `run_google_cloud_migrations.sh` helper script will create a Cloud Run job
-to make migrations run. This should be invoked upon merging in a change that
-has migrations.
-
-TODO: it should be part of the CI pipeline.
-
-If needed, you can then connect to the database via a tunnel with:
-
-```
-gcloud auth login
-gcloud auth application-default login
-
-# production
-./cloud-sql-proxy princeton-hci-wao-dsc:us-central1:drivers-seat --port 54322
-
-# staging
-./cloud-sql-proxy princeton-hci-wao-dsc:us-central1:dsc-staging --port 54300
-```
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
